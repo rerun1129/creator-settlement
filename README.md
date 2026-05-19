@@ -15,9 +15,11 @@
 
 ## 기술 스택
 
-- **언어 / 프레임워크**: Java, Spring Boot
-- **데이터베이스**: MySQL
-- **빌드**: Gradle
+- **언어 / 프레임워크**: Java 21, Spring Boot 3.5.14
+- **데이터 접근**: Spring Data JPA (Hibernate)
+- **데이터베이스**: MySQL 8.4
+- **빌드**: Gradle 9.5.1
+- **테스트**: JUnit 5, AssertJ, Mockito
 - **컨테이너**: Docker, Docker Compose
 - **환경**: 단일 서버 (수평 확장 미고려)
 
