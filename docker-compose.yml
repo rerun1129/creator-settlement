@@ -1,0 +1,54 @@
+services:
+  mysql:
+    image: mysql:8.4.7
+    container_name: creator-settlement-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${MYSQL_HOST_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - creator-settlement
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: creator-settlement-app:latest
+    container_name: creator-settlement-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: "9090"
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Seoul
+      DB_USERNAME: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO:-none}
+      TZ: Asia/Seoul
+    ports:
+      - "${APP_HOST_PORT:-9090}:9090"
+    networks:
+      - creator-settlement
+
+volumes:
+  mysql-data:
+
+networks:
+  creator-settlement:
+    driver: bridge
