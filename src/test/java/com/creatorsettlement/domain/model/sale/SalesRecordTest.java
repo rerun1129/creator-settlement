@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.sale;
 
+import com.creatorsettlement.domain.model.vo.Money;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -17,43 +18,17 @@ class SalesRecordTest {
         // given
         Long courseId = 1L;
         Long studentId = 10L;
-        BigDecimal validAmount = new BigDecimal("80000");
+        Money paymentAmount = new Money(new BigDecimal("80000"));
         LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
 
         // when
-        SalesRecord record = new SalesRecord(courseId, studentId, validAmount, paidAt);
+        SalesRecord record = new SalesRecord(courseId, studentId, paymentAmount, paidAt);
 
         // then
         assertThat(record.getCourseId()).isEqualTo(courseId);
         assertThat(record.getStudentId()).isEqualTo(studentId);
-        assertThat(record.getPaymentAmount()).isEqualByComparingTo(validAmount);
+        assertThat(record.getPaymentAmount()).isEqualTo(paymentAmount);
         assertThat(record.getPaidAt()).isEqualTo(paidAt);
-    }
-
-    @Test
-    @DisplayName("결제 금액이 0이면 예외가 발생한다")
-    void should_throw_when_payment_amount_is_zero() {
-        // given
-        Long courseId = 1L;
-        Long studentId = 10L;
-        BigDecimal zeroAmount = BigDecimal.ZERO;
-        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
-
-        // when & then
-        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, zeroAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("결제 금액이 음수이면 예외가 발생한다")
-    void should_throw_when_payment_amount_is_negative() {
-        // given
-        Long courseId = 1L;
-        Long studentId = 10L;
-        BigDecimal negativeAmount = new BigDecimal("-1");
-        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
-
-        // when & then
-        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, negativeAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -62,7 +37,7 @@ class SalesRecordTest {
         // given
         Long courseId = 1L;
         Long studentId = 10L;
-        BigDecimal paymentAmount = new BigDecimal("10000");
+        Money paymentAmount = new Money(new BigDecimal("10000"));
         LocalDateTime futurePaidAt = LocalDateTime.now().plusMinutes(1);
 
         // when & then
