@@ -42,4 +42,15 @@ class MoneyTest {
         // when & then
         assertThatThrownBy(() -> new Money(negativeValue)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName("값이 null이면 예외가 발생한다")
+    void should_throw_when_value_is_null() {
+        // given (별도 변수 불필요)
+
+        // when & then
+        assertThatThrownBy(() -> new Money(null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("금액은 null일 수 없습니다");
+    }
 }
