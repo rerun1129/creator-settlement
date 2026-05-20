@@ -43,4 +43,52 @@ class SalesRecordTest {
         // when & then
         assertThatThrownBy(() -> new SalesRecord(courseId, studentId, paymentAmount, futurePaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName("Course ID가 null이면 예외가 발생한다")
+    void should_throw_when_course_id_is_null() {
+        // given
+        Long studentId = 10L;
+        Money paymentAmount = new Money(new BigDecimal("80000"));
+        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(null, studentId, paymentAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Student ID가 null이면 예외가 발생한다")
+    void should_throw_when_student_id_is_null() {
+        // given
+        Long courseId = 1L;
+        Money paymentAmount = new Money(new BigDecimal("80000"));
+        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(courseId, null, paymentAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("결제 금액이 null이면 예외가 발생한다")
+    void should_throw_when_payment_amount_is_null() {
+        // given
+        Long courseId = 1L;
+        Long studentId = 10L;
+        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, null, paidAt)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("결제 일시가 null이면 예외가 발생한다")
+    void should_throw_when_paid_at_is_null() {
+        // given
+        Long courseId = 1L;
+        Long studentId = 10L;
+        Money paymentAmount = new Money(new BigDecimal("80000"));
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, paymentAmount, null)).isInstanceOf(IllegalArgumentException.class);
+    }
 }

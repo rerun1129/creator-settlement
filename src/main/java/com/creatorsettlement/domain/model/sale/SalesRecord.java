@@ -11,6 +11,18 @@ public class SalesRecord {
     private final LocalDateTime paidAt;
 
     public SalesRecord(Long courseId, Long studentId, Money paymentAmount, LocalDateTime paidAt) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("Course ID는 null일 수 없습니다");
+        }
+        if (studentId == null) {
+            throw new IllegalArgumentException("Student ID는 null일 수 없습니다");
+        }
+        if (paymentAmount == null) {
+            throw new IllegalArgumentException("결제 금액은 null일 수 없습니다");
+        }
+        if (paidAt == null) {
+            throw new IllegalArgumentException("결제 일시는 null일 수 없습니다");
+        }
         if (paidAt.isAfter(LocalDateTime.now())) {
             throw new IllegalArgumentException("결제 일시는 미래일 수 없습니다");
         }
