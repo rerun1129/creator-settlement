@@ -13,7 +13,11 @@ public class CancellationRecord {
     private final Money remainPaymentAmount;
     private final OccurredAt originalPaidAt;
 
-    public CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount, OccurredAt originalPaidAt) {
+    public static CancellationRecord of(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount, OccurredAt originalPaidAt) {
+        return new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
+    }
+
+    private CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount, OccurredAt originalPaidAt) {
         if (refundAmount.value().compareTo(remainPaymentAmount.value()) > 0) {
             throw new IllegalArgumentException(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
         }

@@ -12,7 +12,11 @@ public class SalesRecord {
     private final Money paymentAmount;
     private final OccurredAt paidAt;
 
-    public SalesRecord(CourseId courseId, StudentId studentId, Money paymentAmount, OccurredAt paidAt) {
+    public static SalesRecord of(CourseId courseId, StudentId studentId, Money paymentAmount, OccurredAt paidAt) {
+        return new SalesRecord(courseId, studentId, paymentAmount, paidAt);
+    }
+
+    private SalesRecord(CourseId courseId, StudentId studentId, Money paymentAmount, OccurredAt paidAt) {
         this.courseId = courseId;
         this.studentId = studentId;
         this.paymentAmount = paymentAmount;

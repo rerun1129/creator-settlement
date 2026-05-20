@@ -23,7 +23,7 @@ public class SalesServiceImpl implements SalesService {
         StudentId studentId = StudentId.of(command.studentId());
         Money paymentAmount = Money.of(command.paymentAmount());
         OccurredAt paidAt = OccurredAt.of(command.paidAt());
-        SalesRecord salesRecord = new SalesRecord(courseId, studentId, paymentAmount, paidAt);
+        SalesRecord salesRecord = SalesRecord.of(courseId, studentId, paymentAmount, paidAt);
         salesRepository.save(salesRecord);
     }
 }

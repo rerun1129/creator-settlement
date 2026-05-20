@@ -27,7 +27,7 @@ class CancellationRecordTest {
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when
-        CancellationRecord record = new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
+        CancellationRecord record = CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
 
         // then
         assertThat(record.getSalesRecordId()).isEqualTo(salesRecordId);
@@ -50,7 +50,7 @@ class CancellationRecordTest {
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -66,7 +66,7 @@ class CancellationRecordTest {
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -81,7 +81,7 @@ class CancellationRecordTest {
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -97,7 +97,7 @@ class CancellationRecordTest {
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when
-        CancellationRecord record = new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
+        CancellationRecord record = CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
 
         // then
         assertThat(record.getRefundAmount()).isEqualTo(refundAmount);
@@ -117,6 +117,6 @@ class CancellationRecordTest {
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when & then
-        assertThatNoException().isThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt));
+        assertThatNoException().isThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt));
     }
 }

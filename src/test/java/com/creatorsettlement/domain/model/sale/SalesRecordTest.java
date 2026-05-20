@@ -25,7 +25,7 @@ class SalesRecordTest {
         OccurredAt paidAt = OccurredAt.of(LocalDateTime.now().minusMinutes(1));
 
         // when
-        SalesRecord record = new SalesRecord(courseId, studentId, paymentAmount, paidAt);
+        SalesRecord record = SalesRecord.of(courseId, studentId, paymentAmount, paidAt);
 
         // then
         assertThat(record.getCourseId()).isEqualTo(courseId);
