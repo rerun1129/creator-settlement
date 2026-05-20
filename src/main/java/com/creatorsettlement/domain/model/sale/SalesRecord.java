@@ -11,7 +11,6 @@ public class SalesRecord {
     private final LocalDateTime paidAt;
 
     public SalesRecord(Long courseId, Long studentId, Money paymentAmount, LocalDateTime paidAt) {
-        // Money 생성 시점에 양수 invariant가 이미 보장됨
         if (paidAt.isAfter(LocalDateTime.now())) {
             throw new IllegalArgumentException("결제 일시는 미래일 수 없습니다");
         }
