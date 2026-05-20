@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.vo;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ class SalesRecordIdTest {
         // given & when & then
         assertThatThrownBy(() -> new SalesRecordId(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("원본 판매 내역 ID는 null일 수 없습니다");
+                .hasMessage(DomainErrorMessage.SALES_RECORD_ID_NULL.message());
     }
 
     @Test

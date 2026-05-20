@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.vo;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -51,6 +52,6 @@ class MoneyTest {
         // when & then
         assertThatThrownBy(() -> new Money(null))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("금액은 null일 수 없습니다");
+            .hasMessage(DomainErrorMessage.MONEY_NULL.message());
     }
 }

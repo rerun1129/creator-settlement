@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.sale;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
@@ -14,10 +15,10 @@ public class CancellationRecord {
 
     public CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount, OccurredAt originalPaidAt) {
         if (refundAmount.value().compareTo(remainPaymentAmount.value()) > 0) {
-            throw new IllegalArgumentException("환불 금액은 잔여 환불 가능 금액을 초과할 수 없습니다");
+            throw new IllegalArgumentException(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
         }
         if (!cancelledAt.value().isAfter(originalPaidAt.value())) {
-            throw new IllegalArgumentException("취소 일시는 원본 결제 일시 이후여야 합니다");
+            throw new IllegalArgumentException(DomainErrorMessage.CANCELLED_AT_NOT_AFTER_ORIGINAL_PAID_AT.message());
         }
         this.salesRecordId = salesRecordId;
         this.refundAmount = refundAmount;

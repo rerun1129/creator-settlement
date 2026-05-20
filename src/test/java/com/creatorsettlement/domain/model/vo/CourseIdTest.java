@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.vo;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ class CourseIdTest {
         // given & when & then
         assertThatThrownBy(() -> new CourseId(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Course ID는 null일 수 없습니다");
+                .hasMessage(DomainErrorMessage.COURSE_ID_NULL.message());
     }
 
     @Test

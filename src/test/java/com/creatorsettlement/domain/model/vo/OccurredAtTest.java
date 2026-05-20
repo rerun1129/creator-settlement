@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.vo;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ class OccurredAtTest {
         // when & then
         assertThatThrownBy(() -> new OccurredAt(null))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("발생 일시는 null일 수 없습니다");
+            .hasMessage(DomainErrorMessage.OCCURRED_AT_NULL.message());
     }
 
     @Test
@@ -43,7 +44,7 @@ class OccurredAtTest {
         // when & then
         assertThatThrownBy(() -> new OccurredAt(future))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("발생 일시는 미래일 수 없습니다");
+            .hasMessage(DomainErrorMessage.OCCURRED_AT_FUTURE.message());
     }
 
     @Test

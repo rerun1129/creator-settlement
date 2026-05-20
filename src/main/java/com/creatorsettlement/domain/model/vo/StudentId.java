@@ -1,10 +1,12 @@
 package com.creatorsettlement.domain.model.vo;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
+
 public record StudentId(Long value) {
 
     public StudentId {
         if (value == null) {
-            throw new IllegalArgumentException("Student ID는 null일 수 없습니다");
+            throw new IllegalArgumentException(DomainErrorMessage.STUDENT_ID_NULL.message());
         }
     }
 }
