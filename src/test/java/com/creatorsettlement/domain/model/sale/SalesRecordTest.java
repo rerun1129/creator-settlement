@@ -1,0 +1,71 @@
+package com.creatorsettlement.domain.model.sale;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import static org.assertj.core.api.Assertions.*;
+
+@DisplayName("SalesRecord 도메인 단위 테스트")
+class SalesRecordTest {
+
+    @Test
+    @DisplayName("정상 입력이면 판매 내역이 생성된다")
+    void should_create_sales_record_when_input_is_valid() {
+        // given
+        Long courseId = 1L;
+        Long studentId = 10L;
+        BigDecimal validAmount = new BigDecimal("80000");
+        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
+
+        // when
+        SalesRecord record = new SalesRecord(courseId, studentId, validAmount, paidAt);
+
+        // then
+        assertThat(record.getCourseId()).isEqualTo(courseId);
+        assertThat(record.getStudentId()).isEqualTo(studentId);
+        assertThat(record.getPaymentAmount()).isEqualByComparingTo(validAmount);
+        assertThat(record.getPaidAt()).isEqualTo(paidAt);
+    }
+
+    @Test
+    @DisplayName("결제 금액이 0이면 예외가 발생한다")
+    void should_throw_when_payment_amount_is_zero() {
+        // given
+        Long courseId = 1L;
+        Long studentId = 10L;
+        BigDecimal zeroAmount = BigDecimal.ZERO;
+        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, zeroAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("결제 금액이 음수이면 예외가 발생한다")
+    void should_throw_when_payment_amount_is_negative() {
+        // given
+        Long courseId = 1L;
+        Long studentId = 10L;
+        BigDecimal negativeAmount = new BigDecimal("-1");
+        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, negativeAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("결제 일시가 미래이면 예외가 발생한다")
+    void should_throw_when_paid_at_is_in_future() {
+        // given
+        Long courseId = 1L;
+        Long studentId = 10L;
+        BigDecimal paymentAmount = new BigDecimal("10000");
+        LocalDateTime futurePaidAt = LocalDateTime.now().plusMinutes(1);
+
+        // when & then
+        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, paymentAmount, futurePaidAt)).isInstanceOf(IllegalArgumentException.class);
+    }
+}
