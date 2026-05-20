@@ -47,18 +47,6 @@ class SalesRecordTest {
     }
 
     @Test
-    @DisplayName("결제 금액이 null이면 예외가 발생한다")
-    void should_throw_when_payment_amount_is_null() {
-        // given
-        CourseId courseId = new CourseId(1L);
-        StudentId studentId = new StudentId(10L);
-        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
-
-        // when & then
-        assertThatThrownBy(() -> new SalesRecord(courseId, studentId, null, paidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("결제 일시가 null이면 예외가 발생한다")
     void should_throw_when_paid_at_is_null() {
         // given

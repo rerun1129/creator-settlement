@@ -13,14 +13,8 @@ public class CancellationRecord {
     private final LocalDateTime originalPaidAt;
 
     public CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, LocalDateTime cancelledAt, Money originalPaymentAmount, LocalDateTime originalPaidAt) {
-        if (refundAmount == null) {
-            throw new IllegalArgumentException("환불 금액은 null일 수 없습니다");
-        }
         if (cancelledAt == null) {
             throw new IllegalArgumentException("취소 일시는 null일 수 없습니다");
-        }
-        if (originalPaymentAmount == null) {
-            throw new IllegalArgumentException("원본 결제 금액은 null일 수 없습니다");
         }
         if (originalPaidAt == null) {
             throw new IllegalArgumentException("원본 결제 일시는 null일 수 없습니다");

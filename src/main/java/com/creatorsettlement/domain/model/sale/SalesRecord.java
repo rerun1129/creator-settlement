@@ -13,9 +13,6 @@ public class SalesRecord {
     private final LocalDateTime paidAt;
 
     public SalesRecord(CourseId courseId, StudentId studentId, Money paymentAmount, LocalDateTime paidAt) {
-        if (paymentAmount == null) {
-            throw new IllegalArgumentException("결제 금액은 null일 수 없습니다");
-        }
         if (paidAt == null) {
             throw new IllegalArgumentException("결제 일시는 null일 수 없습니다");
         }

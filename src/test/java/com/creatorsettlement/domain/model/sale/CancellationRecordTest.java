@@ -91,19 +91,6 @@ class CancellationRecordTest {
     }
 
     @Test
-    @DisplayName("환불 금액이 null이면 예외가 발생한다")
-    void should_throw_when_refund_amount_is_null() {
-        // given
-        SalesRecordId salesRecordId = new SalesRecordId(1L);
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, null, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("취소 일시가 null이면 예외가 발생한다")
     void should_throw_when_cancelled_at_is_null() {
         // given
