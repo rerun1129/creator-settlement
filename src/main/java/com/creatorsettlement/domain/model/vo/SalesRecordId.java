@@ -9,4 +9,8 @@ public record SalesRecordId(Long value) {
             throw new IllegalArgumentException(DomainErrorMessage.SALES_RECORD_ID_NULL.message());
         }
     }
+
+    public static SalesRecordId of(Long value) {
+        return new SalesRecordId(value);
+    }
 }

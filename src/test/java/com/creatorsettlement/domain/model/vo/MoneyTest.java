@@ -18,7 +18,7 @@ class MoneyTest {
         BigDecimal value = new BigDecimal("10000");
 
         // when
-        Money money = new Money(value);
+        Money money = Money.of(value);
 
         // then
         assertThat(money.value()).isEqualByComparingTo(value);
@@ -31,7 +31,7 @@ class MoneyTest {
         BigDecimal zeroValue = BigDecimal.ZERO;
 
         // when & then
-        assertThatThrownBy(() -> new Money(zeroValue)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Money.of(zeroValue)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -41,7 +41,7 @@ class MoneyTest {
         BigDecimal negativeValue = new BigDecimal("-1");
 
         // when & then
-        assertThatThrownBy(() -> new Money(negativeValue)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> Money.of(negativeValue)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -50,7 +50,7 @@ class MoneyTest {
         // given (별도 변수 불필요)
 
         // when & then
-        assertThatThrownBy(() -> new Money(null))
+        assertThatThrownBy(() -> Money.of(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage(DomainErrorMessage.MONEY_NULL.message());
     }

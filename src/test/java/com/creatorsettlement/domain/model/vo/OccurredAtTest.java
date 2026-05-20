@@ -18,7 +18,7 @@ class OccurredAtTest {
         LocalDateTime past = LocalDateTime.now().minusMinutes(1);
 
         // when
-        OccurredAt occurredAt = new OccurredAt(past);
+        OccurredAt occurredAt = OccurredAt.of(past);
 
         // then
         assertThat(occurredAt.value()).isEqualTo(past);
@@ -30,7 +30,7 @@ class OccurredAtTest {
         // given (별도 변수 불필요)
 
         // when & then
-        assertThatThrownBy(() -> new OccurredAt(null))
+        assertThatThrownBy(() -> OccurredAt.of(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage(DomainErrorMessage.OCCURRED_AT_NULL.message());
     }
@@ -42,7 +42,7 @@ class OccurredAtTest {
         LocalDateTime future = LocalDateTime.now().plusMinutes(1);
 
         // when & then
-        assertThatThrownBy(() -> new OccurredAt(future))
+        assertThatThrownBy(() -> OccurredAt.of(future))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage(DomainErrorMessage.OCCURRED_AT_FUTURE.message());
     }
@@ -54,8 +54,8 @@ class OccurredAtTest {
         LocalDateTime value = LocalDateTime.of(2024, 1, 15, 10, 30, 0);
 
         // when
-        OccurredAt first = new OccurredAt(value);
-        OccurredAt second = new OccurredAt(value);
+        OccurredAt first = OccurredAt.of(value);
+        OccurredAt second = OccurredAt.of(value);
 
         // then
         assertThat(first).isEqualTo(second);

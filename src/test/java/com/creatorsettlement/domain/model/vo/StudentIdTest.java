@@ -16,7 +16,7 @@ class StudentIdTest {
         Long value = 1L;
 
         // when
-        StudentId studentId = new StudentId(value);
+        StudentId studentId = StudentId.of(value);
 
         // then
         assertThat(studentId.value()).isEqualTo(value);
@@ -26,7 +26,7 @@ class StudentIdTest {
     @DisplayName("null 값으로 생성 시 IllegalArgumentException이 발생한다")
     void should_throw_when_value_is_null() {
         // given & when & then
-        assertThatThrownBy(() -> new StudentId(null))
+        assertThatThrownBy(() -> StudentId.of(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.STUDENT_ID_NULL.message());
     }
@@ -35,8 +35,8 @@ class StudentIdTest {
     @DisplayName("같은 value를 가지면 equals가 true이다")
     void should_be_equal_when_values_are_same() {
         // given
-        StudentId studentId1 = new StudentId(42L);
-        StudentId studentId2 = new StudentId(42L);
+        StudentId studentId1 = StudentId.of(42L);
+        StudentId studentId2 = StudentId.of(42L);
 
         // when & then
         assertThat(studentId1).isEqualTo(studentId2);
@@ -46,8 +46,8 @@ class StudentIdTest {
     @DisplayName("다른 value를 가지면 equals가 false이다")
     void should_not_be_equal_when_values_differ() {
         // given
-        StudentId studentId1 = new StudentId(1L);
-        StudentId studentId2 = new StudentId(2L);
+        StudentId studentId1 = StudentId.of(1L);
+        StudentId studentId2 = StudentId.of(2L);
 
         // when & then
         assertThat(studentId1).isNotEqualTo(studentId2);

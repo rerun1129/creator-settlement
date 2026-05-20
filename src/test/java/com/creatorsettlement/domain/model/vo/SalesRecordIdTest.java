@@ -16,7 +16,7 @@ class SalesRecordIdTest {
         Long value = 1L;
 
         // when
-        SalesRecordId salesRecordId = new SalesRecordId(value);
+        SalesRecordId salesRecordId = SalesRecordId.of(value);
 
         // then
         assertThat(salesRecordId.value()).isEqualTo(value);
@@ -26,7 +26,7 @@ class SalesRecordIdTest {
     @DisplayName("null 값으로 생성 시 IllegalArgumentException이 발생한다")
     void should_throw_when_value_is_null() {
         // given & when & then
-        assertThatThrownBy(() -> new SalesRecordId(null))
+        assertThatThrownBy(() -> SalesRecordId.of(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.SALES_RECORD_ID_NULL.message());
     }
@@ -35,8 +35,8 @@ class SalesRecordIdTest {
     @DisplayName("같은 value를 가지면 equals가 true이다")
     void should_be_equal_when_values_are_same() {
         // given
-        SalesRecordId salesRecordId1 = new SalesRecordId(42L);
-        SalesRecordId salesRecordId2 = new SalesRecordId(42L);
+        SalesRecordId salesRecordId1 = SalesRecordId.of(42L);
+        SalesRecordId salesRecordId2 = SalesRecordId.of(42L);
 
         // when & then
         assertThat(salesRecordId1).isEqualTo(salesRecordId2);
@@ -46,8 +46,8 @@ class SalesRecordIdTest {
     @DisplayName("다른 value를 가지면 equals가 false이다")
     void should_not_be_equal_when_values_differ() {
         // given
-        SalesRecordId salesRecordId1 = new SalesRecordId(1L);
-        SalesRecordId salesRecordId2 = new SalesRecordId(2L);
+        SalesRecordId salesRecordId1 = SalesRecordId.of(1L);
+        SalesRecordId salesRecordId2 = SalesRecordId.of(2L);
 
         // when & then
         assertThat(salesRecordId1).isNotEqualTo(salesRecordId2);

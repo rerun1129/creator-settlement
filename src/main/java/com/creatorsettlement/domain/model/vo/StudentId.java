@@ -9,4 +9,8 @@ public record StudentId(Long value) {
             throw new IllegalArgumentException(DomainErrorMessage.STUDENT_ID_NULL.message());
         }
     }
+
+    public static StudentId of(Long value) {
+        return new StudentId(value);
+    }
 }

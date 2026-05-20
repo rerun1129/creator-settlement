@@ -19,10 +19,10 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public void register(RegisterSaleCommand command) {
-        CourseId courseId = new CourseId(command.courseId());
-        StudentId studentId = new StudentId(command.studentId());
-        Money paymentAmount = new Money(command.paymentAmount());
-        OccurredAt paidAt = new OccurredAt(command.paidAt());
+        CourseId courseId = CourseId.of(command.courseId());
+        StudentId studentId = StudentId.of(command.studentId());
+        Money paymentAmount = Money.of(command.paymentAmount());
+        OccurredAt paidAt = OccurredAt.of(command.paidAt());
         SalesRecord salesRecord = new SalesRecord(courseId, studentId, paymentAmount, paidAt);
         salesRepository.save(salesRecord);
     }

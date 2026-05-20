@@ -19,10 +19,10 @@ class SalesRecordTest {
     @DisplayName("정상 입력이면 판매 내역이 생성된다")
     void should_create_sales_record_when_input_is_valid() {
         // given
-        CourseId courseId = new CourseId(1L);
-        StudentId studentId = new StudentId(10L);
-        Money paymentAmount = new Money(new BigDecimal("80000"));
-        OccurredAt paidAt = new OccurredAt(LocalDateTime.now().minusMinutes(1));
+        CourseId courseId = CourseId.of(1L);
+        StudentId studentId = StudentId.of(10L);
+        Money paymentAmount = Money.of(new BigDecimal("80000"));
+        OccurredAt paidAt = OccurredAt.of(LocalDateTime.now().minusMinutes(1));
 
         // when
         SalesRecord record = new SalesRecord(courseId, studentId, paymentAmount, paidAt);

@@ -14,4 +14,8 @@ public record Money(BigDecimal value) {
             throw new IllegalArgumentException(DomainErrorMessage.MONEY_NOT_POSITIVE.message());
         }
     }
+
+    public static Money of(BigDecimal value) {
+        return new Money(value);
+    }
 }

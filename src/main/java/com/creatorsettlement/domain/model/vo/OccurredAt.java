@@ -14,4 +14,8 @@ public record OccurredAt(LocalDateTime value) {
             throw new IllegalArgumentException(DomainErrorMessage.OCCURRED_AT_FUTURE.message());
         }
     }
+
+    public static OccurredAt of(LocalDateTime value) {
+        return new OccurredAt(value);
+    }
 }

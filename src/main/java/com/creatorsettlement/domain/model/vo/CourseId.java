@@ -9,4 +9,8 @@ public record CourseId(Long value) {
             throw new IllegalArgumentException(DomainErrorMessage.COURSE_ID_NULL.message());
         }
     }
+
+    public static CourseId of(Long value) {
+        return new CourseId(value);
+    }
 }
