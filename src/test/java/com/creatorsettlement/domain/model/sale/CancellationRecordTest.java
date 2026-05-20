@@ -1,6 +1,7 @@
 package com.creatorsettlement.domain.model.sale;
 
 import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,7 @@ class CancellationRecordTest {
     @DisplayName("정상 입력이면 취소 내역이 생성된다")
     void should_create_cancellation_record_when_input_is_valid() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
@@ -37,7 +38,7 @@ class CancellationRecordTest {
     @DisplayName("환불 금액이 원본 결제 금액을 초과하면 예외가 발생한다")
     void should_throw_when_refund_amount_exceeds_original_payment() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10001"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
@@ -51,7 +52,7 @@ class CancellationRecordTest {
     @DisplayName("취소 일시가 원본 결제 일시보다 이전이면 예외가 발생한다")
     void should_throw_when_cancelled_at_is_before_original_paid_at() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt.minusSeconds(1);
@@ -65,7 +66,7 @@ class CancellationRecordTest {
     @DisplayName("취소 일시가 원본 결제 일시와 동일하면 예외가 발생한다")
     void should_throw_when_cancelled_at_equals_original_paid_at() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt;
@@ -79,7 +80,7 @@ class CancellationRecordTest {
     @DisplayName("취소 일시가 미래이면 예외가 발생한다")
     void should_throw_when_cancelled_at_is_in_future() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = LocalDateTime.now().plusMinutes(1);
@@ -90,23 +91,10 @@ class CancellationRecordTest {
     }
 
     @Test
-    @DisplayName("원본 판매 내역 ID가 null이면 예외가 발생한다")
-    void should_throw_when_sales_record_id_is_null() {
-        // given
-        Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> new CancellationRecord(null, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("환불 금액이 null이면 예외가 발생한다")
     void should_throw_when_refund_amount_is_null() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
@@ -119,7 +107,7 @@ class CancellationRecordTest {
     @DisplayName("취소 일시가 null이면 예외가 발생한다")
     void should_throw_when_cancelled_at_is_null() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
@@ -132,7 +120,7 @@ class CancellationRecordTest {
     @DisplayName("원본 결제 일시가 null이면 예외가 발생한다")
     void should_throw_when_original_paid_at_is_null() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime cancelledAt = LocalDateTime.now().minusMinutes(30);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
@@ -145,7 +133,7 @@ class CancellationRecordTest {
     @DisplayName("환불 금액이 원본 결제 금액보다 작으면 부분 환불로 정상 생성된다")
     void should_create_cancellation_record_when_refund_is_partial() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("3000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
@@ -163,7 +151,7 @@ class CancellationRecordTest {
     @DisplayName("환불 금액이 원본 결제 금액과 동일하면 전액 환불로 정상 생성된다")
     void should_create_cancellation_record_when_refund_equals_original_payment() {
         // given
-        Long salesRecordId = 1L;
+        SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
         LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
         LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);

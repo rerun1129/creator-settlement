@@ -1,20 +1,18 @@
 package com.creatorsettlement.domain.model.sale;
 
 import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import java.time.LocalDateTime;
 
 public class CancellationRecord {
 
-    private final Long salesRecordId;
+    private final SalesRecordId salesRecordId;
     private final Money refundAmount;
     private final LocalDateTime cancelledAt;
     private final Money originalPaymentAmount;
     private final LocalDateTime originalPaidAt;
 
-    public CancellationRecord(Long salesRecordId, Money refundAmount, LocalDateTime cancelledAt, Money originalPaymentAmount, LocalDateTime originalPaidAt) {
-        if (salesRecordId == null) {
-            throw new IllegalArgumentException("원본 판매 내역 ID는 null일 수 없습니다");
-        }
+    public CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, LocalDateTime cancelledAt, Money originalPaymentAmount, LocalDateTime originalPaidAt) {
         if (refundAmount == null) {
             throw new IllegalArgumentException("환불 금액은 null일 수 없습니다");
         }
@@ -43,7 +41,7 @@ public class CancellationRecord {
         this.originalPaidAt = originalPaidAt;
     }
 
-    public Long getSalesRecordId() {
+    public SalesRecordId getSalesRecordId() {
         return salesRecordId;
     }
 

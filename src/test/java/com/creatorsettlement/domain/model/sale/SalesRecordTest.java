@@ -1,6 +1,8 @@
 package com.creatorsettlement.domain.model.sale;
 
+import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.StudentId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,8 +18,8 @@ class SalesRecordTest {
     @DisplayName("정상 입력이면 판매 내역이 생성된다")
     void should_create_sales_record_when_input_is_valid() {
         // given
-        Long courseId = 1L;
-        Long studentId = 10L;
+        CourseId courseId = new CourseId(1L);
+        StudentId studentId = new StudentId(10L);
         Money paymentAmount = new Money(new BigDecimal("80000"));
         LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
 
@@ -35,8 +37,8 @@ class SalesRecordTest {
     @DisplayName("결제 일시가 미래이면 예외가 발생한다")
     void should_throw_when_paid_at_is_in_future() {
         // given
-        Long courseId = 1L;
-        Long studentId = 10L;
+        CourseId courseId = new CourseId(1L);
+        StudentId studentId = new StudentId(10L);
         Money paymentAmount = new Money(new BigDecimal("10000"));
         LocalDateTime futurePaidAt = LocalDateTime.now().plusMinutes(1);
 
@@ -45,35 +47,11 @@ class SalesRecordTest {
     }
 
     @Test
-    @DisplayName("Course ID가 null이면 예외가 발생한다")
-    void should_throw_when_course_id_is_null() {
-        // given
-        Long studentId = 10L;
-        Money paymentAmount = new Money(new BigDecimal("80000"));
-        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
-
-        // when & then
-        assertThatThrownBy(() -> new SalesRecord(null, studentId, paymentAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("Student ID가 null이면 예외가 발생한다")
-    void should_throw_when_student_id_is_null() {
-        // given
-        Long courseId = 1L;
-        Money paymentAmount = new Money(new BigDecimal("80000"));
-        LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
-
-        // when & then
-        assertThatThrownBy(() -> new SalesRecord(courseId, null, paymentAmount, paidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("결제 금액이 null이면 예외가 발생한다")
     void should_throw_when_payment_amount_is_null() {
         // given
-        Long courseId = 1L;
-        Long studentId = 10L;
+        CourseId courseId = new CourseId(1L);
+        StudentId studentId = new StudentId(10L);
         LocalDateTime paidAt = LocalDateTime.now().minusMinutes(1);
 
         // when & then
@@ -84,8 +62,8 @@ class SalesRecordTest {
     @DisplayName("결제 일시가 null이면 예외가 발생한다")
     void should_throw_when_paid_at_is_null() {
         // given
-        Long courseId = 1L;
-        Long studentId = 10L;
+        CourseId courseId = new CourseId(1L);
+        StudentId studentId = new StudentId(10L);
         Money paymentAmount = new Money(new BigDecimal("80000"));
 
         // when & then
