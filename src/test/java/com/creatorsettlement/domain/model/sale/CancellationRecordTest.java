@@ -1,6 +1,7 @@
 package com.creatorsettlement.domain.model.sale;
 
 import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,8 +20,10 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
+        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
+        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
+        OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
+        OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when
@@ -40,8 +43,10 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10001"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
+        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
+        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
+        OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
+        OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
@@ -54,8 +59,10 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.minusSeconds(1);
+        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
+        LocalDateTime cancelledAtValue = originalPaidAtValue.minusSeconds(1);
+        OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
+        OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
@@ -68,52 +75,13 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt;
+        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
+        OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
+        OccurredAt cancelledAt = new OccurredAt(originalPaidAtValue);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
         assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("취소 일시가 미래이면 예외가 발생한다")
-    void should_throw_when_cancelled_at_is_in_future() {
-        // given
-        SalesRecordId salesRecordId = new SalesRecordId(1L);
-        Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = LocalDateTime.now().plusMinutes(1);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("취소 일시가 null이면 예외가 발생한다")
-    void should_throw_when_cancelled_at_is_null() {
-        // given
-        SalesRecordId salesRecordId = new SalesRecordId(1L);
-        Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, null, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("원본 결제 일시가 null이면 예외가 발생한다")
-    void should_throw_when_original_paid_at_is_null() {
-        // given
-        SalesRecordId salesRecordId = new SalesRecordId(1L);
-        Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime cancelledAt = LocalDateTime.now().minusMinutes(30);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, null)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -122,8 +90,10 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("3000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
+        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
+        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
+        OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
+        OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when
@@ -140,8 +110,10 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
-        LocalDateTime originalPaidAt = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAt = originalPaidAt.plusMinutes(10);
+        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
+        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
+        OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
+        OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
         Money originalPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then

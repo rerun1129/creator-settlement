@@ -2,23 +2,17 @@ package com.creatorsettlement.domain.model.sale;
 
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.StudentId;
-import java.time.LocalDateTime;
 
 public class SalesRecord {
 
     private final CourseId courseId;
     private final StudentId studentId;
     private final Money paymentAmount;
-    private final LocalDateTime paidAt;
+    private final OccurredAt paidAt;
 
-    public SalesRecord(CourseId courseId, StudentId studentId, Money paymentAmount, LocalDateTime paidAt) {
-        if (paidAt == null) {
-            throw new IllegalArgumentException("결제 일시는 null일 수 없습니다");
-        }
-        if (paidAt.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException("결제 일시는 미래일 수 없습니다");
-        }
+    public SalesRecord(CourseId courseId, StudentId studentId, Money paymentAmount, OccurredAt paidAt) {
         this.courseId = courseId;
         this.studentId = studentId;
         this.paymentAmount = paymentAmount;
@@ -37,7 +31,7 @@ public class SalesRecord {
         return paymentAmount;
     }
 
-    public LocalDateTime getPaidAt() {
+    public OccurredAt getPaidAt() {
         return paidAt;
     }
 }
