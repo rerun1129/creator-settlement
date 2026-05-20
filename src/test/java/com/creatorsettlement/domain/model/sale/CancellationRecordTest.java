@@ -24,22 +24,22 @@ class CancellationRecordTest {
         LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
         OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
         OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
+        Money remainPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when
-        CancellationRecord record = new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt);
+        CancellationRecord record = new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
 
         // then
         assertThat(record.getSalesRecordId()).isEqualTo(salesRecordId);
         assertThat(record.getRefundAmount()).isEqualTo(refundAmount);
         assertThat(record.getCancelledAt()).isEqualTo(cancelledAt);
-        assertThat(record.getOriginalPaymentAmount()).isEqualTo(originalPaymentAmount);
+        assertThat(record.getRemainPaymentAmount()).isEqualTo(remainPaymentAmount);
         assertThat(record.getOriginalPaidAt()).isEqualTo(originalPaidAt);
     }
 
     @Test
-    @DisplayName("환불 금액이 원본 결제 금액을 초과하면 예외가 발생한다")
-    void should_throw_when_refund_amount_exceeds_original_payment() {
+    @DisplayName("환불 금액이 잔여 환불 가능 금액을 초과하면 예외가 발생한다")
+    void should_throw_when_refund_amount_exceeds_remaining() {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10001"));
@@ -47,10 +47,10 @@ class CancellationRecordTest {
         LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
         OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
         OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
+        Money remainPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -63,10 +63,10 @@ class CancellationRecordTest {
         LocalDateTime cancelledAtValue = originalPaidAtValue.minusSeconds(1);
         OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
         OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
+        Money remainPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -78,14 +78,14 @@ class CancellationRecordTest {
         LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
         OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
         OccurredAt cancelledAt = new OccurredAt(originalPaidAtValue);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
+        Money remainPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    @DisplayName("환불 금액이 원본 결제 금액보다 작으면 부분 환불로 정상 생성된다")
+    @DisplayName("환불 금액이 잔여 환불 가능 금액보다 작으면 부분 환불로 정상 생성된다")
     void should_create_cancellation_record_when_refund_is_partial() {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
@@ -94,19 +94,19 @@ class CancellationRecordTest {
         LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
         OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
         OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
+        Money remainPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when
-        CancellationRecord record = new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt);
+        CancellationRecord record = new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
 
         // then
         assertThat(record.getRefundAmount()).isEqualTo(refundAmount);
-        assertThat(record.getOriginalPaymentAmount()).isEqualTo(originalPaymentAmount);
+        assertThat(record.getRemainPaymentAmount()).isEqualTo(remainPaymentAmount);
     }
 
     @Test
-    @DisplayName("환불 금액이 원본 결제 금액과 동일하면 전액 환불로 정상 생성된다")
-    void should_create_cancellation_record_when_refund_equals_original_payment() {
+    @DisplayName("환불 금액이 잔여 환불 가능 금액과 동일하면 전액 환불로 정상 생성된다")
+    void should_create_cancellation_record_when_refund_equals_remaining() {
         // given
         SalesRecordId salesRecordId = new SalesRecordId(1L);
         Money refundAmount = new Money(new BigDecimal("10000"));
@@ -114,9 +114,9 @@ class CancellationRecordTest {
         LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
         OccurredAt originalPaidAt = new OccurredAt(originalPaidAtValue);
         OccurredAt cancelledAt = new OccurredAt(cancelledAtValue);
-        Money originalPaymentAmount = new Money(new BigDecimal("10000"));
+        Money remainPaymentAmount = new Money(new BigDecimal("10000"));
 
         // when & then
-        assertThatNoException().isThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, originalPaymentAmount, originalPaidAt));
+        assertThatNoException().isThrownBy(() -> new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt));
     }
 }
