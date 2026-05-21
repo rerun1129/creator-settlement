@@ -10,7 +10,10 @@ public enum DomainErrorMessage {
     CREATOR_ID_NULL("크리에이터 ID는 null일 수 없습니다"),
     SALES_RECORD_ID_NULL("원본 판매 내역 ID는 null일 수 없습니다"),
     REFUND_EXCEEDS_REMAINING("환불 금액은 잔여 환불 가능 금액을 초과할 수 없습니다"),
-    SALES_RECORD_NOT_FOUND("원본 판매 내역을 찾을 수 없습니다");
+    SALES_RECORD_NOT_FOUND("원본 판매 내역을 찾을 수 없습니다"),
+    LIST_SALES_FROM_NULL("조회 기간 시작값은 null일 수 없습니다"),
+    LIST_SALES_TO_EXCLUSIVE_NULL("조회 기간 종료값은 null일 수 없습니다"),
+    LIST_SALES_PERIOD_INVALID("조회 기간 시작값은 종료값보다 이후일 수 없습니다");
 
     private final String message;
 
