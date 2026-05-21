@@ -13,8 +13,6 @@ import com.creatorsettlement.domain.repository.SalesRepository;
 import com.creatorsettlement.domain.service.RefundPolicy;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
