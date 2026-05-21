@@ -1,13 +1,20 @@
 package com.creatorsettlement.application;
 
+import com.creatorsettlement.application.CancellationView;
+import com.creatorsettlement.application.ListSalesQuery;
+import com.creatorsettlement.application.SalesListItem;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
+import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
+import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
+import com.creatorsettlement.domain.repository.CourseRepository;
 import com.creatorsettlement.domain.service.RefundPolicy;
+import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,13 +31,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class SalesServiceTest {
 
     private InMemorySalesRepository repository;
+    private CourseRepository courseRepository;
     private SalesService service;
 
     @BeforeEach
     void setUp() {
         repository = new InMemorySalesRepository();
+        courseRepository = new InMemoryCourseRepository();
         RefundPolicy refundPolicy = new RefundPolicy(repository);
-        service = new SalesServiceImpl(repository, refundPolicy);
+        service = new SalesServiceImpl(repository, courseRepository, refundPolicy);
     }
 
     @Test
@@ -215,5 +224,50 @@ class SalesServiceTest {
         assertThatThrownBy(() -> service.registerCancellation(secondCancel))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
+    }
+
+    @Test
+    @DisplayName("등록된 SaleRecord와 연결된 CancellationRecord를 SalesListItem으로 반환한다")
+    void listSales_returnsSalesListItemWithCancellations_whenSaleAndCancellationAreRegistered() {
+        // Given
+        CourseId courseId = CourseId.of(10L);
+        CreatorId creatorId = CreatorId.of(100L);
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "도메인 주도 설계"));
+
+        LocalDateTime paidAt = LocalDateTime.of(2026, 4, 15, 10, 0);
+        RegisterSaleCommand registerCommand = new RegisterSaleCommand(
+                courseId.value(),
+                1L,
+                new BigDecimal("10000"),
+                paidAt
+        );
+        service.register(registerCommand);
+
+        LocalDateTime cancelledAt = LocalDateTime.of(2026, 4, 20, 10, 0);
+        RegisterCancellationCommand cancelCommand = new RegisterCancellationCommand(
+                1L,
+                new BigDecimal("3000"),
+                cancelledAt
+        );
+        service.registerCancellation(cancelCommand);
+
+        LocalDateTime from = LocalDateTime.of(2026, 4, 1, 0, 0);
+        LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
+
+        // When
+        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+
+        // Then
+        assertThat(result).hasSize(1);
+        SalesListItem item = result.get(0);
+        assertThat(item.courseId()).isEqualTo(courseId);
+        assertThat(item.creatorId()).isEqualTo(creatorId);
+        assertThat(item.studentId()).isEqualTo(StudentId.of(1L));
+        assertThat(item.paymentAmount()).isEqualTo(Money.of(new BigDecimal("10000")));
+        assertThat(item.paidAt()).isEqualTo(OccurredAt.of(paidAt));
+        assertThat(item.cancellations()).hasSize(1);
+        CancellationView cancellation = item.cancellations().get(0);
+        assertThat(cancellation.refundAmount()).isEqualTo(Money.of(new BigDecimal("3000")));
+        assertThat(cancellation.cancelledAt()).isEqualTo(OccurredAt.of(cancelledAt));
     }
 }
