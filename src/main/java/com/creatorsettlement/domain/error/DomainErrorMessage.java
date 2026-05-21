@@ -2,7 +2,7 @@ package com.creatorsettlement.domain.error;
 
 public enum DomainErrorMessage {
     MONEY_NULL("금액은 null일 수 없습니다"),
-    MONEY_NOT_POSITIVE("금액은 0보다 커야 합니다"),
+    MONEY_NEGATIVE("금액은 음수일 수 없습니다"),
     OCCURRED_AT_NULL("발생 일시는 null일 수 없습니다"),
     OCCURRED_AT_FUTURE("발생 일시는 미래일 수 없습니다"),
     COURSE_ID_NULL("Course ID는 null일 수 없습니다"),

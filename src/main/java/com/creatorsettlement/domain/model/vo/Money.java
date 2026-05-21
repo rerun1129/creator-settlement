@@ -10,8 +10,8 @@ public record Money(BigDecimal value) {
         if (value == null) {
             throw new IllegalArgumentException(DomainErrorMessage.MONEY_NULL.message());
         }
-        if (value.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException(DomainErrorMessage.MONEY_NOT_POSITIVE.message());
+        if (value.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException(DomainErrorMessage.MONEY_NEGATIVE.message());
         }
     }
 

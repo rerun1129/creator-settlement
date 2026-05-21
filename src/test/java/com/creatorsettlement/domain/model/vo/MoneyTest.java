@@ -25,13 +25,13 @@ class MoneyTest {
     }
 
     @Test
-    @DisplayName("값이 0이면 예외가 발생한다")
-    void should_throw_when_value_is_zero() {
-        // given
-        BigDecimal zeroValue = BigDecimal.ZERO;
+    @DisplayName("값이 0이면 Money가 생성된다")
+    void should_create_money_when_value_is_zero() {
+        // when
+        Money money = Money.of(BigDecimal.ZERO);
 
-        // when & then
-        assertThatThrownBy(() -> Money.of(zeroValue)).isInstanceOf(IllegalArgumentException.class);
+        // then
+        assertThat(money.value()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
