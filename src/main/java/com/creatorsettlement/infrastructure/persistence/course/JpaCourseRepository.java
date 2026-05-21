@@ -4,8 +4,6 @@ import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.repository.CourseRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -18,16 +16,13 @@ public class JpaCourseRepository implements CourseRepository {
 
     private final CourseJpaDataRepository dataRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     public JpaCourseRepository(CourseJpaDataRepository dataRepository) {
         this.dataRepository = dataRepository;
     }
 
     @Override
     public void saveCourse(Course course) {
-        entityManager.persist(CourseMapper.toEntity(course));
+        dataRepository.save(CourseMapper.toEntity(course));
     }
 
     @Override
