@@ -31,6 +31,10 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public void register(RegisterSaleCommand command) {
+        CourseId courseId = CourseId.of(command.courseId());
+        if (!courseRepository.existsByCourseId(courseId)) {
+            throw new IllegalArgumentException(DomainErrorMessage.COURSE_NOT_FOUND_FOR_REGISTRATION.message());
+        }
         salesRepository.saveSalesRecord(command.toSalesRecord());
     }
 

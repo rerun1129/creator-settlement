@@ -13,7 +13,8 @@ public enum DomainErrorMessage {
     SALES_RECORD_NOT_FOUND("원본 판매 내역을 찾을 수 없습니다"),
     LIST_SALES_FROM_NULL("조회 기간 시작값은 null일 수 없습니다"),
     LIST_SALES_TO_EXCLUSIVE_NULL("조회 기간 종료값은 null일 수 없습니다"),
-    LIST_SALES_PERIOD_INVALID("조회 기간 시작값은 종료값보다 이후일 수 없습니다");
+    LIST_SALES_PERIOD_INVALID("조회 기간 시작값은 종료값보다 이후일 수 없습니다"),
+    COURSE_NOT_FOUND_FOR_REGISTRATION("등록 대상 강의를 찾을 수 없습니다");
 
     private final String message;
 

@@ -12,6 +12,8 @@ public interface CourseRepository {
 
     void saveCourse(Course course);
 
+    boolean existsByCourseId(CourseId courseId);
+
     List<CourseId> findCourseIdsByCreatorId(CreatorId creatorId);
 
     Map<CourseId, CreatorId> findCreatorIdsByCourseIds(Collection<CourseId> courseIds);

@@ -26,6 +26,11 @@ public class InMemoryCourseRepository implements CourseRepository {
     }
 
     @Override
+    public boolean existsByCourseId(CourseId courseId) {
+        return coursesById.containsKey(courseId);
+    }
+
+    @Override
     public List<CourseId> findCourseIdsByCreatorId(CreatorId creatorId) {
         return coursesById.values().stream()
                 .filter(course -> course.creatorId().equals(creatorId))
