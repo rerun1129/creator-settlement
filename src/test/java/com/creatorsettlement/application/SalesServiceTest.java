@@ -1,6 +1,12 @@
 package com.creatorsettlement.application;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
+import com.creatorsettlement.domain.model.vo.CourseId;
+import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.OccurredAt;
+import com.creatorsettlement.domain.model.vo.SalesRecordId;
+import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SalesServiceTest {
 
@@ -55,5 +62,66 @@ class SalesServiceTest {
 
         // Then
         assertThat(repository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("취소 등록 시 환불 금액이 누적 환불액으로 저장된다")
+    void registerCancellation_persistsCancellationRecord_whenSalesRecordExists() {
+        // Given
+        LocalDateTime paidAt = LocalDateTime.of(2026, 5, 1, 10, 0, 0);
+        SalesRecord salesRecord = SalesRecord.of(
+                CourseId.of(1L),
+                StudentId.of(2L),
+                Money.of(new BigDecimal("10000")),
+                OccurredAt.of(paidAt)
+        );
+        repository.saveSalesRecord(salesRecord);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+
+        LocalDateTime cancelledAt = LocalDateTime.of(2026, 5, 10, 12, 0, 0);
+        RegisterCancellationCommand cancelCommand = new RegisterCancellationCommand(salesRecordId.value(), new BigDecimal("3000"), cancelledAt);
+
+        // When
+        service.registerCancellation(cancelCommand);
+
+        // Then
+        Money cumulative = repository.sumRefundsBySalesRecordId(salesRecordId);
+        assertThat(cumulative.value()).isEqualByComparingTo(new BigDecimal("3000"));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 SalesRecord ID로 취소 등록 시 예외가 발생한다")
+    void registerCancellation_throwsException_whenSalesRecordNotFound() {
+        // Given
+        LocalDateTime cancelledAt = LocalDateTime.of(2026, 5, 10, 12, 0, 0);
+        RegisterCancellationCommand cancelCommand = new RegisterCancellationCommand(999L, new BigDecimal("3000"), cancelledAt);
+
+        // When & Then
+        assertThatThrownBy(() -> service.registerCancellation(cancelCommand))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.SALES_RECORD_NOT_FOUND.message());
+    }
+
+    @Test
+    @DisplayName("환불 금액이 결제 금액을 초과하면 예외가 발생한다")
+    void registerCancellation_throwsException_whenRefundExceedsRemaining() {
+        // Given
+        LocalDateTime paidAt = LocalDateTime.of(2026, 5, 1, 10, 0, 0);
+        SalesRecord salesRecord = SalesRecord.of(
+                CourseId.of(1L),
+                StudentId.of(2L),
+                Money.of(new BigDecimal("10000")),
+                OccurredAt.of(paidAt)
+        );
+        repository.saveSalesRecord(salesRecord);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+
+        LocalDateTime cancelledAt = LocalDateTime.of(2026, 5, 10, 12, 0, 0);
+        RegisterCancellationCommand cancelCommand = new RegisterCancellationCommand(salesRecordId.value(), new BigDecimal("15000"), cancelledAt);
+
+        // When & Then
+        assertThatThrownBy(() -> service.registerCancellation(cancelCommand))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
     }
 }
