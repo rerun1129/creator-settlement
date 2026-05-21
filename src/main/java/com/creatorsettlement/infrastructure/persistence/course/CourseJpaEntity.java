@@ -7,7 +7,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "course")
-class CourseJpaEntity {
+public class CourseJpaEntity {
 
     @Id
     private Long id;
@@ -21,7 +21,7 @@ class CourseJpaEntity {
     protected CourseJpaEntity() {
     }
 
-    static CourseJpaEntity of(Long id, Long creatorId, String title) {
+    public static CourseJpaEntity of(Long id, Long creatorId, String title) {
         CourseJpaEntity entity = new CourseJpaEntity();
         entity.id = id;
         entity.creatorId = creatorId;
@@ -29,15 +29,15 @@ class CourseJpaEntity {
         return entity;
     }
 
-    Long getId() {
+    public Long getId() {
         return id;
     }
 
-    Long getCreatorId() {
+    public Long getCreatorId() {
         return creatorId;
     }
 
-    String getTitle() {
+    public String getTitle() {
         return title;
     }
 }

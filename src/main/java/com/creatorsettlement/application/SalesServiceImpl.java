@@ -9,6 +9,7 @@ import com.creatorsettlement.domain.repository.CourseRepository;
 import com.creatorsettlement.domain.repository.SalesRepository;
 import com.creatorsettlement.domain.service.RefundPolicy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,6 +26,7 @@ public class SalesServiceImpl implements SalesService {
         this.refundPolicy = refundPolicy;
     }
 
+    @Transactional
     @Override
     public void register(RegisterSaleCommand command) {
         CourseId courseId = CourseId.of(command.courseId());
@@ -34,6 +36,7 @@ public class SalesServiceImpl implements SalesService {
         salesRepository.saveSalesRecord(command.toSalesRecord());
     }
 
+    @Transactional
     @Override
     public void registerCancellation(RegisterCancellationCommand command) {
         SalesRecordId salesRecordId = SalesRecordId.of(command.salesRecordId());
@@ -43,6 +46,7 @@ public class SalesServiceImpl implements SalesService {
         salesRepository.saveCancellationRecord(command.toCancellationRecord());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<SalesListItem> listSales(ListSalesQuery query) {
         return salesRepository.findSalesView(query.toCreatorId(), query.from(), query.toExclusive())

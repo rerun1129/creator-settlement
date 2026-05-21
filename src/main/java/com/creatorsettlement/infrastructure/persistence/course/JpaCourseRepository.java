@@ -6,7 +6,6 @@ import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.repository.CourseRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Profile("jpa")
 @Repository
 public class JpaCourseRepository implements CourseRepository {
 
