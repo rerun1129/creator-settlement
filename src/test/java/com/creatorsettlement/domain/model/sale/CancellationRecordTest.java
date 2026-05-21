@@ -20,21 +20,17 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = SalesRecordId.of(1L);
         Money refundAmount = Money.of(new BigDecimal("10000"));
-        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
-        OccurredAt originalPaidAt = OccurredAt.of(originalPaidAtValue);
-        OccurredAt cancelledAt = OccurredAt.of(cancelledAtValue);
+        OccurredAt cancelledAt = OccurredAt.of(LocalDateTime.now().minusHours(1));
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when
-        CancellationRecord record = CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
+        CancellationRecord record = CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount);
 
         // then
         assertThat(record.getSalesRecordId()).isEqualTo(salesRecordId);
         assertThat(record.getRefundAmount()).isEqualTo(refundAmount);
         assertThat(record.getCancelledAt()).isEqualTo(cancelledAt);
         assertThat(record.getRemainPaymentAmount()).isEqualTo(remainPaymentAmount);
-        assertThat(record.getOriginalPaidAt()).isEqualTo(originalPaidAt);
     }
 
     @Test
@@ -43,45 +39,11 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = SalesRecordId.of(1L);
         Money refundAmount = Money.of(new BigDecimal("10001"));
-        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
-        OccurredAt originalPaidAt = OccurredAt.of(originalPaidAtValue);
-        OccurredAt cancelledAt = OccurredAt.of(cancelledAtValue);
+        OccurredAt cancelledAt = OccurredAt.of(LocalDateTime.now().minusHours(1));
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when & then
-        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("취소 일시가 원본 결제 일시보다 이전이면 예외가 발생한다")
-    void should_throw_when_cancelled_at_is_before_original_paid_at() {
-        // given
-        SalesRecordId salesRecordId = SalesRecordId.of(1L);
-        Money refundAmount = Money.of(new BigDecimal("10000"));
-        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAtValue = originalPaidAtValue.minusSeconds(1);
-        OccurredAt originalPaidAt = OccurredAt.of(originalPaidAtValue);
-        OccurredAt cancelledAt = OccurredAt.of(cancelledAtValue);
-        Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("취소 일시가 원본 결제 일시와 동일하면 예외가 발생한다")
-    void should_throw_when_cancelled_at_equals_original_paid_at() {
-        // given
-        SalesRecordId salesRecordId = SalesRecordId.of(1L);
-        Money refundAmount = Money.of(new BigDecimal("10000"));
-        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
-        OccurredAt originalPaidAt = OccurredAt.of(originalPaidAtValue);
-        OccurredAt cancelledAt = OccurredAt.of(originalPaidAtValue);
-        Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
-
-        // when & then
-        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -90,14 +52,11 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = SalesRecordId.of(1L);
         Money refundAmount = Money.of(new BigDecimal("3000"));
-        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
-        OccurredAt originalPaidAt = OccurredAt.of(originalPaidAtValue);
-        OccurredAt cancelledAt = OccurredAt.of(cancelledAtValue);
+        OccurredAt cancelledAt = OccurredAt.of(LocalDateTime.now().minusHours(1));
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when
-        CancellationRecord record = CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
+        CancellationRecord record = CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount);
 
         // then
         assertThat(record.getRefundAmount()).isEqualTo(refundAmount);
@@ -110,13 +69,10 @@ class CancellationRecordTest {
         // given
         SalesRecordId salesRecordId = SalesRecordId.of(1L);
         Money refundAmount = Money.of(new BigDecimal("10000"));
-        LocalDateTime originalPaidAtValue = LocalDateTime.now().minusHours(1);
-        LocalDateTime cancelledAtValue = originalPaidAtValue.plusMinutes(10);
-        OccurredAt originalPaidAt = OccurredAt.of(originalPaidAtValue);
-        OccurredAt cancelledAt = OccurredAt.of(cancelledAtValue);
+        OccurredAt cancelledAt = OccurredAt.of(LocalDateTime.now().minusHours(1));
         Money remainPaymentAmount = Money.of(new BigDecimal("10000"));
 
         // when & then
-        assertThatNoException().isThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt));
+        assertThatNoException().isThrownBy(() -> CancellationRecord.of(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount));
     }
 }

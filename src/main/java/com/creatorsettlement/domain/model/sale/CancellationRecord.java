@@ -11,24 +11,19 @@ public class CancellationRecord {
     private final Money refundAmount;
     private final OccurredAt cancelledAt;
     private final Money remainPaymentAmount;
-    private final OccurredAt originalPaidAt;
 
-    public static CancellationRecord of(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount, OccurredAt originalPaidAt) {
-        return new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount, originalPaidAt);
+    public static CancellationRecord of(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount) {
+        return new CancellationRecord(salesRecordId, refundAmount, cancelledAt, remainPaymentAmount);
     }
 
-    private CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount, OccurredAt originalPaidAt) {
+    private CancellationRecord(SalesRecordId salesRecordId, Money refundAmount, OccurredAt cancelledAt, Money remainPaymentAmount) {
         if (refundAmount.value().compareTo(remainPaymentAmount.value()) > 0) {
             throw new IllegalArgumentException(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
-        }
-        if (!cancelledAt.value().isAfter(originalPaidAt.value())) {
-            throw new IllegalArgumentException(DomainErrorMessage.CANCELLED_AT_NOT_AFTER_ORIGINAL_PAID_AT.message());
         }
         this.salesRecordId = salesRecordId;
         this.refundAmount = refundAmount;
         this.cancelledAt = cancelledAt;
         this.remainPaymentAmount = remainPaymentAmount;
-        this.originalPaidAt = originalPaidAt;
     }
 
     public SalesRecordId getSalesRecordId() {
@@ -45,9 +40,5 @@ public class CancellationRecord {
 
     public Money getRemainPaymentAmount() {
         return remainPaymentAmount;
-    }
-
-    public OccurredAt getOriginalPaidAt() {
-        return originalPaidAt;
     }
 }
