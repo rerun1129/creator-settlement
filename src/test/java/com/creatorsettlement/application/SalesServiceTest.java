@@ -7,6 +7,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
+import com.creatorsettlement.domain.service.RefundPolicy;
 import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +29,8 @@ class SalesServiceTest {
     @BeforeEach
     void setUp() {
         repository = new InMemorySalesRepository();
-        service = new SalesServiceImpl(repository);
+        RefundPolicy refundPolicy = new RefundPolicy(repository);
+        service = new SalesServiceImpl(repository, refundPolicy);
     }
 
     @Test
