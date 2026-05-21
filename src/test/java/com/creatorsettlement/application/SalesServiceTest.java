@@ -144,4 +144,74 @@ class SalesServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
     }
+
+    @Test
+    @DisplayName("이전 환불이 있어도 잔여 범위 내 환불은 누적되어 저장된다")
+    void registerCancellation_persistsCancellationRecord_whenWithinRemainingAfterPriorRefund() {
+        // Given
+        SalesRecord salesRecord = SalesRecord.of(CourseId.of(1L), StudentId.of(2L),
+                Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 5, 1, 10, 0, 0)));
+        repository.saveSalesRecord(salesRecord);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+
+        RegisterCancellationCommand firstCancel = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("3000"), LocalDateTime.of(2026, 5, 10, 12, 0, 0));
+        service.registerCancellation(firstCancel);
+
+        RegisterCancellationCommand secondCancel = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("5000"), LocalDateTime.of(2026, 5, 15, 12, 0, 0));
+
+        // When
+        service.registerCancellation(secondCancel);
+
+        // Then
+        Money cumulative = repository.sumRefundsBySalesRecordId(salesRecordId);
+        assertThat(cumulative.value()).isEqualByComparingTo(new BigDecimal("8000"));
+    }
+
+    @Test
+    @DisplayName("이전 환불과의 누적합이 결제 금액과 같으면 통과한다")
+    void registerCancellation_persistsCancellationRecord_whenSumEqualsPaymentAcrossMultipleRefunds() {
+        // Given
+        SalesRecord salesRecord = SalesRecord.of(CourseId.of(1L), StudentId.of(2L),
+                Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 5, 1, 10, 0, 0)));
+        repository.saveSalesRecord(salesRecord);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+
+        RegisterCancellationCommand firstCancel = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("3000"), LocalDateTime.of(2026, 5, 10, 12, 0, 0));
+        service.registerCancellation(firstCancel);
+
+        RegisterCancellationCommand secondCancel = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("7000"), LocalDateTime.of(2026, 5, 15, 12, 0, 0));
+
+        // When
+        service.registerCancellation(secondCancel);
+
+        // Then
+        Money cumulative = repository.sumRefundsBySalesRecordId(salesRecordId);
+        assertThat(cumulative.value()).isEqualByComparingTo(new BigDecimal("10000"));
+    }
+
+    @Test
+    @DisplayName("이전 환불과의 누적합이 결제 금액을 초과하면 예외가 발생한다")
+    void registerCancellation_throwsException_whenSumExceedsPaymentAcrossMultipleRefunds() {
+        // Given
+        SalesRecord salesRecord = SalesRecord.of(CourseId.of(1L), StudentId.of(2L),
+                Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 5, 1, 10, 0, 0)));
+        repository.saveSalesRecord(salesRecord);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+
+        RegisterCancellationCommand firstCancel = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("7000"), LocalDateTime.of(2026, 5, 10, 12, 0, 0));
+        service.registerCancellation(firstCancel);
+
+        RegisterCancellationCommand secondCancel = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("5000"), LocalDateTime.of(2026, 5, 15, 12, 0, 0));
+
+        // When & Then
+        assertThatThrownBy(() -> service.registerCancellation(secondCancel))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
+    }
 }
