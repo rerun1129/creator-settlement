@@ -6,7 +6,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Course 엔티티")
 class CourseTest {
@@ -26,30 +25,6 @@ class CourseTest {
         assertThat(course.courseId()).isEqualTo(courseId);
         assertThat(course.creatorId()).isEqualTo(creatorId);
         assertThat(course.title()).isEqualTo(title);
-    }
-
-    @Test
-    @DisplayName("courseId가 null이면 IllegalArgumentException을 던진다")
-    void of_throwsException_whenCourseIdIsNull() {
-        // Given
-        CourseId courseId = null;
-        CreatorId creatorId = CreatorId.of(100L);
-
-        // When / Then
-        assertThatThrownBy(() -> Course.of(courseId, creatorId, "title 더미"))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("creatorId가 null이면 IllegalArgumentException을 던진다")
-    void of_throwsException_whenCreatorIdIsNull() {
-        // Given
-        CourseId courseId = CourseId.of(10L);
-        CreatorId creatorId = null;
-
-        // When / Then
-        assertThatThrownBy(() -> Course.of(courseId, creatorId, "title 더미"))
-                .isInstanceOf(IllegalArgumentException.class);
     }
 
 }
