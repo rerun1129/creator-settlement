@@ -1,9 +1,12 @@
 package com.creatorsettlement.domain.model.sale;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.StudentId;
+
+import java.math.BigDecimal;
 
 public class SalesRecord {
 
@@ -37,5 +40,12 @@ public class SalesRecord {
 
     public OccurredAt getPaidAt() {
         return paidAt;
+    }
+
+    public void validateRefund(Money refundAmount, Money cumulativeRefundedSoFar) {
+        BigDecimal remain = this.paymentAmount.value().subtract(cumulativeRefundedSoFar.value());
+        if (refundAmount.value().compareTo(remain) > 0) {
+            throw new IllegalArgumentException(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
+        }
     }
 }
