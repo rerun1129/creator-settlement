@@ -3,8 +3,11 @@ package com.creatorsettlement.infrastructure.persistence;
 import com.creatorsettlement.domain.model.sale.CancellationRecord;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
+import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
+import com.creatorsettlement.domain.repository.CourseRepository;
+import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.SalesRepository;
 import org.springframework.stereotype.Repository;
@@ -29,6 +32,11 @@ public class InMemorySalesRepository implements SalesRepository {
     private final AtomicLong sequence = new AtomicLong();
     private final Map<SalesRecordId, SalesRecord> salesById = new ConcurrentHashMap<>();
     private final List<CancellationRecord> cancellations = new CopyOnWriteArrayList<>();
+    private final CourseRepository courseRepository;
+
+    public InMemorySalesRepository(CourseRepository courseRepository) {
+        this.courseRepository = courseRepository;
+    }
 
     @Override
     public void saveSalesRecord(SalesRecord salesRecord) {
@@ -55,8 +63,7 @@ public class InMemorySalesRepository implements SalesRepository {
         cancellations.add(cancellationRecord);
     }
 
-    @Override
-    public List<SalesRecordWithId> findByPeriod(LocalDateTime from, LocalDateTime toExclusive) {
+    private List<SalesRecordWithId> findByPeriod(LocalDateTime from, LocalDateTime toExclusive) {
         return salesById.entrySet().stream()
                 .filter(e -> {
                     LocalDateTime paidAt = e.getValue().getPaidAt().value();
@@ -66,8 +73,7 @@ public class InMemorySalesRepository implements SalesRepository {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public List<SalesRecordWithId> findByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds) {
+    private List<SalesRecordWithId> findByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds) {
         Set<CourseId> courseIdSet = new HashSet<>(courseIds);
         return salesById.entrySet().stream()
                 .filter(e -> {
@@ -80,12 +86,43 @@ public class InMemorySalesRepository implements SalesRepository {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public Map<SalesRecordId, List<CancellationRecord>> findCancellationsBySalesRecordIds(Collection<SalesRecordId> ids) {
+    private Map<SalesRecordId, List<CancellationRecord>> findCancellationsBySalesRecordIds(Collection<SalesRecordId> ids) {
         Set<SalesRecordId> idSet = new HashSet<>(ids);
         return cancellations.stream()
                 .filter(c -> idSet.contains(c.getSalesRecordId()))
                 .collect(Collectors.groupingBy(CancellationRecord::getSalesRecordId));
+    }
+
+    @Override
+    public List<SalesRecordView> findSalesViewByPeriod(LocalDateTime from, LocalDateTime toExclusive) {
+        List<SalesRecordWithId> sales = findByPeriod(from, toExclusive);
+        return buildViews(sales);
+    }
+
+    @Override
+    public List<SalesRecordView> findSalesViewByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds) {
+        List<SalesRecordWithId> sales = findByPeriodAndCourseIds(from, toExclusive, courseIds);
+        return buildViews(sales);
+    }
+
+    private List<SalesRecordView> buildViews(List<SalesRecordWithId> sales) {
+        if (sales.isEmpty()) {
+            return List.of();
+        }
+        List<SalesRecordId> saleIds = sales.stream().map(SalesRecordWithId::id).toList();
+        Map<SalesRecordId, List<CancellationRecord>> cancellationsBySaleId = findCancellationsBySalesRecordIds(saleIds);
+
+        List<CourseId> courseIdsInSales = sales.stream().map(s -> s.record().getCourseId()).distinct().toList();
+        Map<CourseId, CreatorId> creatorIdByCourseId = courseRepository.findCreatorIdsByCourseIds(courseIdsInSales);
+
+        return sales.stream()
+                .map(s -> new SalesRecordView(
+                        s.id(),
+                        s.record(),
+                        cancellationsBySaleId.getOrDefault(s.id(), List.of()),
+                        creatorIdByCourseId.get(s.record().getCourseId())
+                ))
+                .toList();
     }
 
     public List<SalesRecord> findAll() {

@@ -36,8 +36,8 @@ class SalesServiceTest {
 
     @BeforeEach
     void setUp() {
-        repository = new InMemorySalesRepository();
         courseRepository = new InMemoryCourseRepository();
+        repository = new InMemorySalesRepository(courseRepository);
         RefundPolicy refundPolicy = new RefundPolicy(repository);
         service = new SalesServiceImpl(repository, courseRepository, refundPolicy);
     }

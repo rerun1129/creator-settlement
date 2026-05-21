@@ -9,7 +9,6 @@ import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface SalesRepository {
@@ -22,9 +21,7 @@ public interface SalesRepository {
 
     void saveCancellationRecord(CancellationRecord cancellationRecord);
 
-    List<SalesRecordWithId> findByPeriod(LocalDateTime from, LocalDateTime toExclusive);
+    List<SalesRecordView> findSalesViewByPeriod(LocalDateTime from, LocalDateTime toExclusive);
 
-    List<SalesRecordWithId> findByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds);
-
-    Map<SalesRecordId, List<CancellationRecord>> findCancellationsBySalesRecordIds(Collection<SalesRecordId> ids);
+    List<SalesRecordView> findSalesViewByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds);
 }

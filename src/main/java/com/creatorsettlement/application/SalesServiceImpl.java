@@ -1,20 +1,18 @@
 package com.creatorsettlement.application;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
-import com.creatorsettlement.domain.model.sale.CancellationRecord;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.repository.CourseRepository;
-import com.creatorsettlement.domain.repository.SalesRecordWithId;
+import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRepository;
 import com.creatorsettlement.domain.service.RefundPolicy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class SalesServiceImpl implements SalesService {
@@ -49,50 +47,35 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public List<SalesListItem> listSales(ListSalesQuery query) {
-        List<SalesRecordWithId> sales = fetchSales(query);
-        if (sales.isEmpty()) {
-            return List.of();
-        }
-
-        List<SalesRecordId> saleIds = sales.stream().map(SalesRecordWithId::id).toList();
-        Map<SalesRecordId, List<CancellationRecord>> cancellationsBySaleId = salesRepository.findCancellationsBySalesRecordIds(saleIds);
-
-        List<CourseId> courseIdsInSales = sales.stream().map(s -> s.record().getCourseId()).distinct().toList();
-        Map<CourseId, CreatorId> creatorIdByCourseId = courseRepository.findCreatorIdsByCourseIds(courseIdsInSales);
-
-        return sales.stream()
-                .map(s -> toSalesListItem(
-                        s,
-                        cancellationsBySaleId.getOrDefault(s.id(), List.of()),
-                        creatorIdByCourseId.get(s.record().getCourseId())
-                ))
+        return fetchSalesViews(query).stream()
+                .map(this::toSalesListItem)
                 .toList();
     }
 
-    private List<SalesRecordWithId> fetchSales(ListSalesQuery query) {
+    private List<SalesRecordView> fetchSalesViews(ListSalesQuery query) {
         if (query.creatorId() == null) {
-            return salesRepository.findByPeriod(query.from(), query.toExclusive());
+            return salesRepository.findSalesViewByPeriod(query.from(), query.toExclusive());
         }
         CreatorId creatorId = CreatorId.of(query.creatorId());
         List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
         if (courseIds.isEmpty()) {
             return List.of();
         }
-        return salesRepository.findByPeriodAndCourseIds(query.from(), query.toExclusive(), courseIds);
+        return salesRepository.findSalesViewByPeriodAndCourseIds(query.from(), query.toExclusive(), courseIds);
     }
 
-    private SalesListItem toSalesListItem(SalesRecordWithId entry, List<CancellationRecord> cancellations, CreatorId creatorId) {
-        List<CancellationView> views = cancellations.stream()
+    private SalesListItem toSalesListItem(SalesRecordView view) {
+        List<CancellationView> cancellationViews = view.cancellations().stream()
                 .map(c -> new CancellationView(c.getRefundAmount(), c.getCancelledAt()))
                 .toList();
         return new SalesListItem(
-                entry.id(),
-                entry.record().getCourseId(),
-                entry.record().getStudentId(),
-                creatorId,
-                entry.record().getPaymentAmount(),
-                entry.record().getPaidAt(),
-                views
+                view.id(),
+                view.record().getCourseId(),
+                view.record().getStudentId(),
+                view.creatorId(),
+                view.record().getPaymentAmount(),
+                view.record().getPaidAt(),
+                cancellationViews
         );
     }
 }
