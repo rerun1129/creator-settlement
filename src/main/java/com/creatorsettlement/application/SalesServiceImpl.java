@@ -11,6 +11,8 @@ import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.SalesRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class SalesServiceImpl implements SalesService {
 
@@ -32,7 +34,10 @@ public class SalesServiceImpl implements SalesService {
                 .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.SALES_RECORD_NOT_FOUND.message()));
         Money refundAmount = Money.of(command.refundAmount());
         Money cumulative = salesRepository.sumRefundsBySalesRecordId(salesRecordId);
-        sale.validateRefund(refundAmount, cumulative);
+        BigDecimal remain = sale.getPaymentAmount().value().subtract(cumulative.value());
+        if (refundAmount.value().compareTo(remain) > 0) {
+            throw new IllegalArgumentException(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
+        }
         CancellationRecord cancellation = CancellationRecord.of(salesRecordId, refundAmount, OccurredAt.of(command.cancelledAt()));
         salesRepository.saveCancellationRecord(cancellation);
     }

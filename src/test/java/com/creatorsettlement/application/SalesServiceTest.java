@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SalesServiceTest {
@@ -100,6 +101,25 @@ class SalesServiceTest {
         assertThatThrownBy(() -> service.registerCancellation(cancelCommand))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.SALES_RECORD_NOT_FOUND.message());
+    }
+
+    @Test
+    @DisplayName("환불 금액과 누적 환불액의 합이 결제 금액과 같으면 통과한다")
+    void registerCancellation_persistsCancellationRecord_whenRefundEqualsRemaining() {
+        // Given
+        SalesRecord salesRecord = SalesRecord.of(
+                CourseId.of(1L),
+                StudentId.of(2L),
+                Money.of(new BigDecimal("10000")),
+                OccurredAt.of(LocalDateTime.of(2026, 5, 1, 10, 0, 0))
+        );
+        repository.saveSalesRecord(salesRecord);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+        RegisterCancellationCommand cancelCommand = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("10000"), LocalDateTime.of(2026, 5, 10, 12, 0, 0));
+
+        // When & Then
+        assertThatNoException().isThrownBy(() -> service.registerCancellation(cancelCommand));
     }
 
     @Test
