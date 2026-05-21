@@ -94,14 +94,17 @@ public class InMemorySalesRepository implements SalesRepository {
     }
 
     @Override
-    public List<SalesRecordView> findSalesViewByPeriod(LocalDateTime from, LocalDateTime toExclusive) {
-        List<SalesRecordWithId> sales = findByPeriod(from, toExclusive);
-        return buildViews(sales);
-    }
-
-    @Override
-    public List<SalesRecordView> findSalesViewByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds) {
-        List<SalesRecordWithId> sales = findByPeriodAndCourseIds(from, toExclusive, courseIds);
+    public List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive) {
+        List<SalesRecordWithId> sales;
+        if (creatorId == null) {
+            sales = findByPeriod(from, toExclusive);
+        } else {
+            List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
+            if (courseIds.isEmpty()) {
+                return List.of();
+            }
+            sales = findByPeriodAndCourseIds(from, toExclusive, courseIds);
+        }
         return buildViews(sales);
     }
 

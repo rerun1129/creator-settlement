@@ -3,11 +3,9 @@ package com.creatorsettlement.application;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
-import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.repository.CourseRepository;
-import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRepository;
 import com.creatorsettlement.domain.service.RefundPolicy;
 import org.springframework.stereotype.Service;
@@ -47,35 +45,9 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public List<SalesListItem> listSales(ListSalesQuery query) {
-        return fetchSalesViews(query).stream()
-                .map(this::toSalesListItem)
+        return salesRepository.findSalesView(query.toCreatorId(), query.from(), query.toExclusive())
+                .stream()
+                .map(SalesListItem::from)
                 .toList();
-    }
-
-    private List<SalesRecordView> fetchSalesViews(ListSalesQuery query) {
-        if (query.creatorId() == null) {
-            return salesRepository.findSalesViewByPeriod(query.from(), query.toExclusive());
-        }
-        CreatorId creatorId = CreatorId.of(query.creatorId());
-        List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
-        if (courseIds.isEmpty()) {
-            return List.of();
-        }
-        return salesRepository.findSalesViewByPeriodAndCourseIds(query.from(), query.toExclusive(), courseIds);
-    }
-
-    private SalesListItem toSalesListItem(SalesRecordView view) {
-        List<CancellationView> cancellationViews = view.cancellations().stream()
-                .map(c -> new CancellationView(c.getRefundAmount(), c.getCancelledAt()))
-                .toList();
-        return new SalesListItem(
-                view.id(),
-                view.record().getCourseId(),
-                view.record().getStudentId(),
-                view.creatorId(),
-                view.record().getPaymentAmount(),
-                view.record().getPaidAt(),
-                cancellationViews
-        );
     }
 }

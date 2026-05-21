@@ -2,12 +2,11 @@ package com.creatorsettlement.domain.repository;
 
 import com.creatorsettlement.domain.model.sale.CancellationRecord;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
-import com.creatorsettlement.domain.model.vo.CourseId;
+import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,7 +20,5 @@ public interface SalesRepository {
 
     void saveCancellationRecord(CancellationRecord cancellationRecord);
 
-    List<SalesRecordView> findSalesViewByPeriod(LocalDateTime from, LocalDateTime toExclusive);
-
-    List<SalesRecordView> findSalesViewByPeriodAndCourseIds(LocalDateTime from, LocalDateTime toExclusive, Collection<CourseId> courseIds);
+    List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive);
 }
