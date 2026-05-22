@@ -5,6 +5,7 @@ import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRepository;
 import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
+import com.creatorsettlement.infrastructure.persistence.creator.CreatorJpaEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,8 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("creator 기간 조회 시 각 sales의 cancellations가 record별로 정확히 분리되어 반환된다")
     void findSalesView_groupsCancellationsByRecord() {
         // given
-        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
+        Long creatorId = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 A")).getId();
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(creatorId, "강의 A"));
         SalesRecordJpaEntity sale1 = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 10, 10, 0)));
         SalesRecordJpaEntity sale2 = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 15, 10, 0)));
 
@@ -50,11 +52,11 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(100L)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result).allMatch(v -> v.creatorId().equals(CreatorId.of(100L)));
+        assertThat(result).allMatch(v -> v.creatorId().equals(CreatorId.of(creatorId)));
 
         SalesRecordView viewSale1 = result.stream()
                 .filter(v -> v.id().equals(SalesRecordId.of(sale1.getId())))
@@ -73,8 +75,10 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("creatorId 필터링 시 다른 creator의 sales는 반환되지 않는다")
     void findSalesView_returnsOnlyMatchingCreatorSales_whenMultipleCreatorsExist() {
         // given
-        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
-        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(200L, "강의 B"));
+        Long creatorIdA = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 A")).getId();
+        Long creatorIdB = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 B")).getId();
+        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(creatorIdA, "강의 A"));
+        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(creatorIdB, "강의 B"));
 
         em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 10, 10, 0)));
         em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 12, 10, 0)));
@@ -85,18 +89,19 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(100L)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorIdA)), from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
-        assertThat(result).allMatch(v -> v.creatorId().equals(CreatorId.of(100L)));
+        assertThat(result).allMatch(v -> v.creatorId().equals(CreatorId.of(creatorIdA)));
     }
 
     @Test
     @DisplayName("paidAt이 from 직전이거나 toExclusive 경계 이후인 sales는 반환되지 않는다")
     void findSalesView_excludesSalesOutsidePeriodBoundaries() {
         // given
-        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
+        Long creatorId = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 A")).getId();
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(creatorId, "강의 A"));
 
         LocalDateTime from = LocalDateTime.of(2026, 4, 1, 0, 0);
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
@@ -108,7 +113,7 @@ class JpaSalesRepositoryFindViewTest {
         em.clear();
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(100L)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
@@ -123,8 +128,10 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("creatorId가 Optional.empty()이면 기간 내 모든 creator의 sales를 반환한다")
     void findSalesView_returnsAllCreatorSales_whenCreatorIdIsEmpty() {
         // given
-        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
-        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(200L, "강의 B"));
+        Long creatorIdA = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 A")).getId();
+        Long creatorIdB = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 B")).getId();
+        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(creatorIdA, "강의 A"));
+        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(creatorIdB, "강의 B"));
 
         em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 10, 10, 0)));
         em.persistAndFlush(salesEntity(courseB, LocalDateTime.of(2026, 4, 11, 10, 0)));
@@ -139,14 +146,15 @@ class JpaSalesRepositoryFindViewTest {
         // then
         assertThat(result).hasSize(2);
         assertThat(result).extracting(SalesRecordView::creatorId)
-                .containsExactlyInAnyOrder(CreatorId.of(100L), CreatorId.of(200L));
+                .containsExactlyInAnyOrder(CreatorId.of(creatorIdA), CreatorId.of(creatorIdB));
     }
 
     @Test
     @DisplayName("sale에 cancellation이 없으면 빈 cancellations 리스트로 반환된다")
     void findSalesView_returnsEmptyCancellations_whenSaleHasNoCancellations() {
         // given
-        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
+        Long creatorId = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 A")).getId();
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(creatorId, "강의 A"));
         SalesRecordJpaEntity sale = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 10, 10, 0)));
         em.clear();
 
@@ -154,7 +162,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(100L)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
 
         // then
         assertThat(result).hasSize(1);

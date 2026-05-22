@@ -9,7 +9,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "creator")
-class CreatorJpaEntity {
+public class CreatorJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,13 +22,13 @@ class CreatorJpaEntity {
     protected CreatorJpaEntity() {
     }
 
-    static CreatorJpaEntity of(String name) {
+    public static CreatorJpaEntity of(String name) {
         CreatorJpaEntity entity = new CreatorJpaEntity();
         entity.name = name;
         return entity;
     }
 
-    Long getId() {
+    public Long getId() {
         return id;
     }
 
