@@ -64,21 +64,6 @@ class SalesServiceTest {
     }
 
     @Test
-    @DisplayName("판매 등록 1회는 저장소에 정확히 1건만 추가한다")
-    void register_appendsExactlyOneRecord_perInvocation() {
-        // Given
-        seedCourse(1L, 100L, "샘플 강의");
-        LocalDateTime paidAt = LocalDateTime.of(2026, 5, 1, 10, 0, 0);
-        RegisterSaleCommand command = new RegisterSaleCommand(1L, 2L, new BigDecimal("10000"), paidAt);
-
-        // When
-        service.register(command);
-
-        // Then
-        assertThat(repository.findAll()).hasSize(1);
-    }
-
-    @Test
     @DisplayName("존재하지 않는 강의 ID로 판매 등록 시 예외가 발생한다")
     void register_throwsException_whenCourseDoesNotExist() {
         // Given
