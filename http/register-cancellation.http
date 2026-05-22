@@ -1,0 +1,41 @@
+@host = http://localhost:9090
+
+### 취소 등록 - 전액 환불
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{
+  "salesRecordId": 1,
+  "refundAmount": 50000,
+  "cancelledAt": "2026-05-23T14:30:00"
+}
+
+### 취소 등록 - 부분 환불
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{
+  "salesRecordId": 1,
+  "refundAmount": 10000,
+  "cancelledAt": "2026-05-23T14:30:00"
+}
+
+### 취소 등록 - 다른 월 취소 (월 비대칭 확인용)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{
+  "salesRecordId": 1,
+  "refundAmount": 50000,
+  "cancelledAt": "2026-06-05T09:00:00"
+}
+
+### 취소 등록 - validation 실패 확인용 (refundAmount 음수)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{
+  "salesRecordId": 1,
+  "refundAmount": -1000,
+  "cancelledAt": "2026-05-23T14:30:00"
+}
