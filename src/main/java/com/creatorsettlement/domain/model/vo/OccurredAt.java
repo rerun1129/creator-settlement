@@ -10,9 +10,6 @@ public record OccurredAt(LocalDateTime value) {
         if (value == null) {
             throw new IllegalArgumentException(DomainErrorMessage.OCCURRED_AT_NULL.message());
         }
-        if (value.isAfter(LocalDateTime.now())) {
-            throw new IllegalArgumentException(DomainErrorMessage.OCCURRED_AT_FUTURE.message());
-        }
     }
 
     public static OccurredAt of(LocalDateTime value) {

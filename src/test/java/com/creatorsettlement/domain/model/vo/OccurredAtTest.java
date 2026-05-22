@@ -12,19 +12,6 @@ import static org.assertj.core.api.Assertions.*;
 class OccurredAtTest {
 
     @Test
-    @DisplayName("과거 시점이면 OccurredAt이 생성된다")
-    void should_create_occurred_at_when_value_is_past() {
-        // given
-        LocalDateTime past = LocalDateTime.now().minusMinutes(1);
-
-        // when
-        OccurredAt occurredAt = OccurredAt.of(past);
-
-        // then
-        assertThat(occurredAt.value()).isEqualTo(past);
-    }
-
-    @Test
     @DisplayName("값이 null이면 예외가 발생한다")
     void should_throw_when_value_is_null() {
         // given (별도 변수 불필요)
@@ -33,18 +20,6 @@ class OccurredAtTest {
         assertThatThrownBy(() -> OccurredAt.of(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage(DomainErrorMessage.OCCURRED_AT_NULL.message());
-    }
-
-    @Test
-    @DisplayName("미래 시점이면 예외가 발생한다")
-    void should_throw_when_value_is_in_future() {
-        // given
-        LocalDateTime future = LocalDateTime.now().plusMinutes(1);
-
-        // when & then
-        assertThatThrownBy(() -> OccurredAt.of(future))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage(DomainErrorMessage.OCCURRED_AT_FUTURE.message());
     }
 
     @Test
@@ -59,5 +34,18 @@ class OccurredAtTest {
 
         // then
         assertThat(first).isEqualTo(second);
+    }
+
+    @Test
+    @DisplayName("LocalDateTime 값이 주어지면 OccurredAt이 생성된다")
+    void should_create_occurred_at_when_value_is_present() {
+        // Given
+        LocalDateTime value = LocalDateTime.of(2026, 4, 1, 12, 0);
+
+        // When
+        OccurredAt occurredAt = OccurredAt.of(value);
+
+        // Then
+        assertThat(occurredAt.value()).isEqualTo(value);
     }
 }

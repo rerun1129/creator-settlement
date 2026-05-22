@@ -4,7 +4,6 @@ public enum DomainErrorMessage {
     MONEY_NULL("금액은 null일 수 없습니다"),
     MONEY_NEGATIVE("금액은 음수일 수 없습니다"),
     OCCURRED_AT_NULL("발생 일시는 null일 수 없습니다"),
-    OCCURRED_AT_FUTURE("발생 일시는 미래일 수 없습니다"),
     COURSE_ID_NULL("Course ID는 null일 수 없습니다"),
     STUDENT_ID_NULL("Student ID는 null일 수 없습니다"),
     CREATOR_ID_NULL("크리에이터 ID는 null일 수 없습니다"),
