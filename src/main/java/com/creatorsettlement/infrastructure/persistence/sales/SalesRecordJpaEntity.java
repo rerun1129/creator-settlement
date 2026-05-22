@@ -1,5 +1,6 @@
 package com.creatorsettlement.infrastructure.persistence.sales;
 
+import com.creatorsettlement.infrastructure.persistence.BaseTimeEntity;
 import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sales_record")
-class SalesRecordJpaEntity {
+class SalesRecordJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

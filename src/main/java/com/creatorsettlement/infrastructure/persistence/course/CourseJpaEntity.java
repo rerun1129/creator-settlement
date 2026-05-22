@@ -1,5 +1,6 @@
 package com.creatorsettlement.infrastructure.persistence.course;
 
+import com.creatorsettlement.infrastructure.persistence.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,7 +10,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "course")
-public class CourseJpaEntity {
+public class CourseJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
