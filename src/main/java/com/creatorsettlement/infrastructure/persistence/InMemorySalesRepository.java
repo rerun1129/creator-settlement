@@ -9,8 +9,6 @@ import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.SalesRepository;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,8 +24,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-@Profile("inmemory")
-@Repository
 public class InMemorySalesRepository implements SalesRepository {
 
     private final AtomicLong sequence = new AtomicLong();
