@@ -168,6 +168,38 @@ class SalesControllerE2ETest {
                 .andExpect(jsonPath("$.code").value("REFUND_EXCEEDS_REMAINING"));
     }
 
+    @Test
+    @DisplayName("동일 판매에 다회 환불 누적이 결제 금액을 초과하면 400과 REFUND_EXCEEDS_REMAINING을 반환한다")
+    void registerCancellation_returns400_whenCumulativeRefundExceedsRemaining() throws Exception {
+        // given
+        saveCourse(7L, 100L, "강의 G");
+        saveSale(7L, 10L, "10000", LocalDateTime.of(2026, 5, 1, 12, 0));
+        long saleId = latestSaleId(100L, LocalDateTime.of(2026, 5, 1, 0, 0), LocalDateTime.of(2026, 6, 1, 0, 0));
+
+        String firstBody = objectMapper.writeValueAsString(Map.of(
+                "salesRecordId", saleId,
+                "refundAmount", 7000,
+                "cancelledAt", "2026-05-02T12:00:00"
+        ));
+        String secondBody = objectMapper.writeValueAsString(Map.of(
+                "salesRecordId", saleId,
+                "refundAmount", 5000,
+                "cancelledAt", "2026-05-03T12:00:00"
+        ));
+
+        // when & then
+        mockMvc.perform(post("/api/sales/cancellations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(firstBody))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/sales/cancellations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(secondBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("REFUND_EXCEEDS_REMAINING"));
+    }
+
     // ─── GET /api/sales ─────────────────────────────────────────────────────────
 
     @Test
