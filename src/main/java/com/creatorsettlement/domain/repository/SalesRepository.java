@@ -20,5 +20,5 @@ public interface SalesRepository {
 
     void saveCancellationRecord(CancellationRecord cancellationRecord);
 
-    List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive);
+    List<SalesRecordView> findSalesView(Optional<CreatorId> creatorId, LocalDateTime from, LocalDateTime toExclusive);
 }

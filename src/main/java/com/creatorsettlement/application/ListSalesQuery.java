@@ -3,6 +3,7 @@ package com.creatorsettlement.application;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 public record ListSalesQuery(Long creatorId, LocalDateTime from, LocalDateTime toExclusive) {
     public ListSalesQuery {
@@ -17,7 +18,7 @@ public record ListSalesQuery(Long creatorId, LocalDateTime from, LocalDateTime t
         }
     }
 
-    public CreatorId toCreatorId() {
-        return creatorId == null ? null : CreatorId.of(creatorId);
+    public Optional<CreatorId> toCreatorId() {
+        return Optional.ofNullable(creatorId).map(CreatorId::of);
     }
 }
