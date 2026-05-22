@@ -2,6 +2,8 @@ package com.creatorsettlement.infrastructure.persistence.course;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -10,6 +12,8 @@ import jakarta.persistence.Table;
 public class CourseJpaEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "course_id")
     private Long id;
 
     @Column(name = "creator_id", nullable = false)
@@ -21,9 +25,8 @@ public class CourseJpaEntity {
     protected CourseJpaEntity() {
     }
 
-    public static CourseJpaEntity of(Long id, Long creatorId, String title) {
+    public static CourseJpaEntity of(Long creatorId, String title) {
         CourseJpaEntity entity = new CourseJpaEntity();
-        entity.id = id;
         entity.creatorId = creatorId;
         entity.title = title;
         return entity;

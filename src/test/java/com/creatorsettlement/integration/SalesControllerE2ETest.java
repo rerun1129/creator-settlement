@@ -1,15 +1,16 @@
 package com.creatorsettlement.integration;
 
-import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.sale.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.StudentId;
-import com.creatorsettlement.domain.repository.CourseRepository;
 import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRepository;
+import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,8 +48,8 @@ class SalesControllerE2ETest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private CourseRepository courseRepo;
+    @PersistenceContext
+    private EntityManager em;
 
     @Autowired
     private SalesRepository salesRepo;
@@ -59,11 +60,11 @@ class SalesControllerE2ETest {
     @DisplayName("등록 대상 강의가 존재하면 201을 반환한다")
     void register_returns201_whenCourseExists() throws Exception {
         // given
-        saveCourse(1L, 100L, "강의 A");
+        long courseId = saveCourse(100L, "강의 A");
 
         String body = """
-                {"courseId":1,"studentId":10,"paymentAmount":50000,"paidAt":"2026-05-01T12:00:00"}
-                """;
+                {"courseId":%d,"studentId":10,"paymentAmount":50000,"paidAt":"2026-05-01T12:00:00"}
+                """.formatted(courseId);
 
         // when & then
         mockMvc.perform(post("/api/sales")
@@ -93,11 +94,11 @@ class SalesControllerE2ETest {
     @DisplayName("필수 paymentAmount가 누락되면 400과 VALIDATION을 반환한다")
     void register_returns400_whenPaymentAmountMissing() throws Exception {
         // given
-        saveCourse(1L, 100L, "강의 A");
+        long courseId = saveCourse(100L, "강의 A");
 
         String body = """
-                {"courseId":1,"studentId":10,"paidAt":"2026-05-01T12:00:00"}
-                """;
+                {"courseId":%d,"studentId":10,"paidAt":"2026-05-01T12:00:00"}
+                """.formatted(courseId);
 
         // when & then
         mockMvc.perform(post("/api/sales")
@@ -113,8 +114,8 @@ class SalesControllerE2ETest {
     @DisplayName("원본 판매가 존재하고 환불 금액이 정상이면 201을 반환한다")
     void registerCancellation_returns201_whenOriginalSaleExists() throws Exception {
         // given
-        saveCourse(2L, 100L, "강의 B");
-        saveSale(2L, 10L, "50000", LocalDateTime.of(2026, 5, 1, 12, 0));
+        long courseId = saveCourse(100L, "강의 B");
+        saveSale(courseId, 10L, "50000", LocalDateTime.of(2026, 5, 1, 12, 0));
         long saleId = latestSaleId(100L, LocalDateTime.of(2026, 5, 1, 0, 0), LocalDateTime.of(2026, 5, 2, 0, 0));
 
         String body = objectMapper.writeValueAsString(Map.of(
@@ -150,8 +151,8 @@ class SalesControllerE2ETest {
     @DisplayName("환불 금액이 결제 금액을 초과하면 400과 REFUND_EXCEEDS_REMAINING을 반환한다")
     void registerCancellation_returns400_whenRefundExceedsRemaining() throws Exception {
         // given
-        saveCourse(3L, 100L, "강의 C");
-        saveSale(3L, 10L, "10000", LocalDateTime.of(2026, 5, 1, 12, 0));
+        long courseId = saveCourse(100L, "강의 C");
+        saveSale(courseId, 10L, "10000", LocalDateTime.of(2026, 5, 1, 12, 0));
         long saleId = latestSaleId(100L, LocalDateTime.of(2026, 5, 1, 0, 0), LocalDateTime.of(2026, 5, 2, 0, 0));
 
         String body = objectMapper.writeValueAsString(Map.of(
@@ -172,8 +173,8 @@ class SalesControllerE2ETest {
     @DisplayName("동일 판매에 다회 환불 누적이 결제 금액을 초과하면 400과 REFUND_EXCEEDS_REMAINING을 반환한다")
     void registerCancellation_returns400_whenCumulativeRefundExceedsRemaining() throws Exception {
         // given
-        saveCourse(7L, 100L, "강의 G");
-        saveSale(7L, 10L, "10000", LocalDateTime.of(2026, 5, 1, 12, 0));
+        long courseId = saveCourse(100L, "강의 G");
+        saveSale(courseId, 10L, "10000", LocalDateTime.of(2026, 5, 1, 12, 0));
         long saleId = latestSaleId(100L, LocalDateTime.of(2026, 5, 1, 0, 0), LocalDateTime.of(2026, 6, 1, 0, 0));
 
         String firstBody = objectMapper.writeValueAsString(Map.of(
@@ -217,10 +218,10 @@ class SalesControllerE2ETest {
     @DisplayName("여러 판매가 있으면 paidAt 내림차순으로 정렬된다")
     void listSales_returnsSortedByPaidAtDesc_whenMultipleSales() throws Exception {
         // given
-        saveCourse(4L, 100L, "강의 D");
-        saveSale(4L, 10L, "10000", LocalDateTime.of(2026, 4, 10, 10, 0));
-        saveSale(4L, 11L, "20000", LocalDateTime.of(2026, 4, 15, 10, 0));
-        saveSale(4L, 12L, "30000", LocalDateTime.of(2026, 4, 5, 10, 0));
+        long courseId = saveCourse(100L, "강의 D");
+        saveSale(courseId, 10L, "10000", LocalDateTime.of(2026, 4, 10, 10, 0));
+        saveSale(courseId, 11L, "20000", LocalDateTime.of(2026, 4, 15, 10, 0));
+        saveSale(courseId, 12L, "30000", LocalDateTime.of(2026, 4, 5, 10, 0));
 
         // when & then
         mockMvc.perform(get("/api/sales")
@@ -237,10 +238,10 @@ class SalesControllerE2ETest {
     @DisplayName("creatorId를 지정하면 해당 크리에이터의 판매만 반환한다")
     void listSales_filtersByCreatorId_whenCreatorIdProvided() throws Exception {
         // given
-        saveCourse(5L, 100L, "강의 E");
-        saveCourse(6L, 200L, "강의 F");
-        saveSale(5L, 10L, "10000", LocalDateTime.of(2026, 4, 10, 10, 0));
-        saveSale(6L, 11L, "20000", LocalDateTime.of(2026, 4, 11, 10, 0));
+        long courseId100 = saveCourse(100L, "강의 E");
+        long courseId200 = saveCourse(200L, "강의 F");
+        saveSale(courseId100, 10L, "10000", LocalDateTime.of(2026, 4, 10, 10, 0));
+        saveSale(courseId200, 11L, "20000", LocalDateTime.of(2026, 4, 11, 10, 0));
 
         // when & then
         mockMvc.perform(get("/api/sales")
@@ -264,8 +265,11 @@ class SalesControllerE2ETest {
 
     // ─── Fixture helpers ─────────────────────────────────────────────────────────
 
-    private void saveCourse(long courseId, long creatorId, String title) {
-        courseRepo.saveCourse(Course.of(CourseId.of(courseId), CreatorId.of(creatorId), title));
+    private long saveCourse(long creatorId, String title) {
+        CourseJpaEntity entity = CourseJpaEntity.of(creatorId, title);
+        em.persist(entity);
+        em.flush();
+        return entity.getId();
     }
 
     private void saveSale(long courseId, long studentId, String paymentAmount, LocalDateTime paidAt) {

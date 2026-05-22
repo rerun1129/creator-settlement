@@ -20,6 +20,7 @@ class SalesRecordJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "sales_record_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

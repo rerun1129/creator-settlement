@@ -16,6 +16,7 @@ class CancellationRecordJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "cancellation_record_id")
     private Long id;
 
     @Column(name = "sales_record_id", nullable = false)

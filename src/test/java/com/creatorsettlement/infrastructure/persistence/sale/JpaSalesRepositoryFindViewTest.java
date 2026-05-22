@@ -37,7 +37,7 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("creator 기간 조회 시 각 sales의 cancellations가 record별로 정확히 분리되어 반환된다")
     void findSalesView_groupsCancellationsByRecord() {
         // given
-        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(1L, 100L, "강의 A"));
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
         SalesRecordJpaEntity sale1 = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 10, 10, 0)));
         SalesRecordJpaEntity sale2 = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 15, 10, 0)));
 
@@ -73,8 +73,8 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("creatorId 필터링 시 다른 creator의 sales는 반환되지 않는다")
     void findSalesView_returnsOnlyMatchingCreatorSales_whenMultipleCreatorsExist() {
         // given
-        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(10L, 100L, "강의 A"));
-        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(11L, 200L, "강의 B"));
+        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
+        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(200L, "강의 B"));
 
         em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 10, 10, 0)));
         em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 12, 10, 0)));
@@ -96,7 +96,7 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("paidAt이 from 직전이거나 toExclusive 경계 이후인 sales는 반환되지 않는다")
     void findSalesView_excludesSalesOutsidePeriodBoundaries() {
         // given
-        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(20L, 100L, "강의 A"));
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
 
         LocalDateTime from = LocalDateTime.of(2026, 4, 1, 0, 0);
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
@@ -123,8 +123,8 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("creatorId가 Optional.empty()이면 기간 내 모든 creator의 sales를 반환한다")
     void findSalesView_returnsAllCreatorSales_whenCreatorIdIsEmpty() {
         // given
-        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(40L, 100L, "강의 A"));
-        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(41L, 200L, "강의 B"));
+        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
+        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(200L, "강의 B"));
 
         em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 10, 10, 0)));
         em.persistAndFlush(salesEntity(courseB, LocalDateTime.of(2026, 4, 11, 10, 0)));
@@ -146,7 +146,7 @@ class JpaSalesRepositoryFindViewTest {
     @DisplayName("sale에 cancellation이 없으면 빈 cancellations 리스트로 반환된다")
     void findSalesView_returnsEmptyCancellations_whenSaleHasNoCancellations() {
         // given
-        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(50L, 100L, "강의 A"));
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(100L, "강의 A"));
         SalesRecordJpaEntity sale = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 10, 10, 0)));
         em.clear();
 

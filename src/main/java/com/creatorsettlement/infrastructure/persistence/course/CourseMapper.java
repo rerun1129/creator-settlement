@@ -9,7 +9,6 @@ class CourseMapper {
 
     static CourseJpaEntity toEntity(Course course) {
         return CourseJpaEntity.of(
-                course.courseId().value(),
                 course.creatorId().value(),
                 course.title()
         );
