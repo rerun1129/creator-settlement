@@ -119,6 +119,49 @@ class JpaSalesRepositoryFindViewTest {
                 );
     }
 
+    @Test
+    @DisplayName("creatorId가 Optional.empty()이면 기간 내 모든 creator의 sales를 반환한다")
+    void findSalesView_returnsAllCreatorSales_whenCreatorIdIsEmpty() {
+        // given
+        CourseJpaEntity courseA = em.persistAndFlush(CourseJpaEntity.of(40L, 100L, "강의 A"));
+        CourseJpaEntity courseB = em.persistAndFlush(CourseJpaEntity.of(41L, 200L, "강의 B"));
+
+        em.persistAndFlush(salesEntity(courseA, LocalDateTime.of(2026, 4, 10, 10, 0)));
+        em.persistAndFlush(salesEntity(courseB, LocalDateTime.of(2026, 4, 11, 10, 0)));
+        em.clear();
+
+        LocalDateTime from = LocalDateTime.of(2026, 4, 1, 0, 0);
+        LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
+
+        // when
+        List<SalesRecordView> result = sut.findSalesView(Optional.empty(), from, toExclusive);
+
+        // then
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(SalesRecordView::creatorId)
+                .containsExactlyInAnyOrder(CreatorId.of(100L), CreatorId.of(200L));
+    }
+
+    @Test
+    @DisplayName("sale에 cancellation이 없으면 빈 cancellations 리스트로 반환된다")
+    void findSalesView_returnsEmptyCancellations_whenSaleHasNoCancellations() {
+        // given
+        CourseJpaEntity course = em.persistAndFlush(CourseJpaEntity.of(50L, 100L, "강의 A"));
+        SalesRecordJpaEntity sale = em.persistAndFlush(salesEntity(course, LocalDateTime.of(2026, 4, 10, 10, 0)));
+        em.clear();
+
+        LocalDateTime from = LocalDateTime.of(2026, 4, 1, 0, 0);
+        LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
+
+        // when
+        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(100L)), from, toExclusive);
+
+        // then
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).id()).isEqualTo(SalesRecordId.of(sale.getId()));
+        assertThat(result.get(0).cancellations()).isEmpty();
+    }
+
     private SalesRecordJpaEntity salesEntity(CourseJpaEntity course, LocalDateTime paidAt) {
         return SalesRecordJpaEntity.of(course, 1L, new BigDecimal("10000"), paidAt);
     }
