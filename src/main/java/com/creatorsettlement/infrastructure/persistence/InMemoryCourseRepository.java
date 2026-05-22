@@ -32,16 +32,14 @@ public class InMemoryCourseRepository implements CourseRepository {
         return coursesById.containsKey(courseId);
     }
 
-    @Override
-    public List<CourseId> findCourseIdsByCreatorId(CreatorId creatorId) {
+    List<CourseId> findCourseIdsByCreatorId(CreatorId creatorId) {
         return coursesById.values().stream()
                 .filter(course -> course.creatorId().equals(creatorId))
                 .map(Course::courseId)
                 .toList();
     }
 
-    @Override
-    public Map<CourseId, CreatorId> findCreatorIdsByCourseIds(Collection<CourseId> courseIds) {
+    Map<CourseId, CreatorId> findCreatorIdsByCourseIds(Collection<CourseId> courseIds) {
         Set<CourseId> ids = new HashSet<>(courseIds);
         return coursesById.values().stream()
                 .filter(course -> ids.contains(course.courseId()))

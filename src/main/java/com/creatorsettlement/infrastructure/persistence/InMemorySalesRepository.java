@@ -6,7 +6,6 @@ import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
-import com.creatorsettlement.domain.repository.CourseRepository;
 import com.creatorsettlement.domain.repository.SalesRecordView;
 import com.creatorsettlement.domain.repository.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.SalesRepository;
@@ -34,9 +33,9 @@ public class InMemorySalesRepository implements SalesRepository {
     private final AtomicLong sequence = new AtomicLong();
     private final Map<SalesRecordId, SalesRecord> salesById = new ConcurrentHashMap<>();
     private final List<CancellationRecord> cancellations = new CopyOnWriteArrayList<>();
-    private final CourseRepository courseRepository;
+    private final InMemoryCourseRepository courseRepository;
 
-    public InMemorySalesRepository(CourseRepository courseRepository) {
+    public InMemorySalesRepository(InMemoryCourseRepository courseRepository) {
         this.courseRepository = courseRepository;
     }
 

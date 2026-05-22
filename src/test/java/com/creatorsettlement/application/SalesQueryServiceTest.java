@@ -7,7 +7,6 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
-import com.creatorsettlement.domain.repository.CourseRepository;
 import com.creatorsettlement.domain.service.RefundPolicy;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
@@ -25,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SalesQueryServiceTest {
 
     private InMemorySalesRepository repository;
-    private CourseRepository courseRepository;
+    private InMemoryCourseRepository courseRepository;
     private SalesService service;
 
     @BeforeEach
