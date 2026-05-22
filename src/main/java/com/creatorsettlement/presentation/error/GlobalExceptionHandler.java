@@ -3,7 +3,7 @@ package com.creatorsettlement.presentation.error;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -32,8 +32,8 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(status.value(), matched.name(), matched.message()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException e) {
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(BindException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .reduce((a, b) -> a + "; " + b).orElse("validation failed");

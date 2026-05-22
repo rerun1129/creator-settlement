@@ -252,6 +252,16 @@ class SalesControllerE2ETest {
                 .andExpect(jsonPath("$[0].creatorId").value(100));
     }
 
+    @Test
+    @DisplayName("필수 from 파라미터가 누락되면 400과 VALIDATION을 반환한다")
+    void listSales_returns400_whenFromMissing() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/sales")
+                        .param("toExclusive", "2026-05-01T00:00:00"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION"));
+    }
+
     // ─── Fixture helpers ─────────────────────────────────────────────────────────
 
     private void saveCourse(long courseId, long creatorId, String title) {

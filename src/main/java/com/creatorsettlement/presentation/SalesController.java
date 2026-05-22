@@ -40,7 +40,7 @@ public class SalesController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SalesItemResponse>> listSales(@ModelAttribute ListSalesRequest req) {
+    public ResponseEntity<List<SalesItemResponse>> listSales(@Valid @ModelAttribute ListSalesRequest req) {
         return ResponseEntity.ok(SalesItemResponse.fromAllSortedByPaidAtDesc(
                 salesService.listSales(req.toQuery())));
     }
