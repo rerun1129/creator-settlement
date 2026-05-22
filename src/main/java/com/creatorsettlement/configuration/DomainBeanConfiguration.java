@@ -1,7 +1,7 @@
 package com.creatorsettlement.configuration;
 
-import com.creatorsettlement.domain.repository.SalesRepository;
-import com.creatorsettlement.domain.service.RefundPolicy;
+import com.creatorsettlement.domain.repository.sales.SalesRepository;
+import com.creatorsettlement.domain.service.sales.RefundPolicy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

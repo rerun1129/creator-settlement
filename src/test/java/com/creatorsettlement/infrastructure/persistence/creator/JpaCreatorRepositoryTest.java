@@ -2,7 +2,7 @@ package com.creatorsettlement.infrastructure.persistence.creator;
 
 import com.creatorsettlement.domain.model.creator.Creator;
 import com.creatorsettlement.domain.model.vo.CreatorId;
-import com.creatorsettlement.domain.repository.CreatorRepository;
+import com.creatorsettlement.domain.repository.creator.CreatorRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

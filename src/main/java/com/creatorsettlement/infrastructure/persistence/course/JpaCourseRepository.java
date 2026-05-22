@@ -2,7 +2,7 @@ package com.creatorsettlement.infrastructure.persistence.course;
 
 import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.vo.CourseId;
-import com.creatorsettlement.domain.repository.CourseRepository;
+import com.creatorsettlement.domain.repository.course.CourseRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository

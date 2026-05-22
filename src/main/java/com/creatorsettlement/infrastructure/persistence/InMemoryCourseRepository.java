@@ -3,7 +3,7 @@ package com.creatorsettlement.infrastructure.persistence;
 import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
-import com.creatorsettlement.domain.repository.CourseRepository;
+import com.creatorsettlement.domain.repository.course.CourseRepository;
 
 import java.util.Collection;
 import java.util.HashSet;

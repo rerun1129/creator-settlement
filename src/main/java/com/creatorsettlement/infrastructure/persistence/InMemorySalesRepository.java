@@ -1,14 +1,14 @@
 package com.creatorsettlement.infrastructure.persistence;
 
-import com.creatorsettlement.domain.model.sale.CancellationRecord;
-import com.creatorsettlement.domain.model.sale.SalesRecord;
+import com.creatorsettlement.domain.model.sales.CancellationRecord;
+import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
-import com.creatorsettlement.domain.repository.SalesRecordView;
-import com.creatorsettlement.domain.repository.SalesRecordWithId;
-import com.creatorsettlement.domain.repository.SalesRepository;
+import com.creatorsettlement.domain.repository.sales.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
+import com.creatorsettlement.domain.repository.sales.SalesRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

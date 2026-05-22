@@ -2,7 +2,7 @@ package com.creatorsettlement.infrastructure.persistence;
 
 import com.creatorsettlement.domain.model.creator.Creator;
 import com.creatorsettlement.domain.model.vo.CreatorId;
-import com.creatorsettlement.domain.repository.CreatorRepository;
+import com.creatorsettlement.domain.repository.creator.CreatorRepository;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
