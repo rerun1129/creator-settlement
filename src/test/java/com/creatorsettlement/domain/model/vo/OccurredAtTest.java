@@ -14,9 +14,8 @@ class OccurredAtTest {
     @Test
     @DisplayName("값이 null이면 예외가 발생한다")
     void should_throw_when_value_is_null() {
-        // given (별도 변수 불필요)
-
-        // when & then
+        // when
+        // then
         assertThatThrownBy(() -> OccurredAt.of(null))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage(DomainErrorMessage.OCCURRED_AT_NULL.message());
@@ -39,13 +38,13 @@ class OccurredAtTest {
     @Test
     @DisplayName("LocalDateTime 값이 주어지면 OccurredAt이 생성된다")
     void should_create_occurred_at_when_value_is_present() {
-        // Given
+        // given
         LocalDateTime value = LocalDateTime.of(2026, 4, 1, 12, 0);
 
-        // When
+        // when
         OccurredAt occurredAt = OccurredAt.of(value);
 
-        // Then
+        // then
         assertThat(occurredAt.value()).isEqualTo(value);
     }
 }

@@ -12,23 +12,24 @@ class CreatorIdTest {
     @Test
     @DisplayName("정상 입력이면 CreatorId가 생성되고 value를 반환한다")
     void of_returnsCreatorId_whenInputIsValid() {
-        // Given
+        // given
         Long input = 1L;
 
-        // When
+        // when
         CreatorId creatorId = CreatorId.of(input);
 
-        // Then
+        // then
         assertThat(creatorId.value()).isEqualTo(input);
     }
 
     @Test
     @DisplayName("value가 null이면 IllegalArgumentException을 던진다")
     void of_throwsException_whenValueIsNull() {
-        // Given
+        // given
         Long input = null;
 
-        // When / Then
+        // when
+        // then
         assertThatThrownBy(() -> CreatorId.of(input))
                 .isInstanceOf(IllegalArgumentException.class);
     }
