@@ -22,6 +22,5 @@ interface SalesRecordJpaDataRepository extends JpaRepository<SalesRecordJpaEntit
             @Param("to") LocalDateTime to
     );
 
-    @Query("SELECT s FROM SalesRecordJpaEntity s WHERE s.course.id = :courseId AND s.studentId = :studentId")
-    List<SalesRecordJpaEntity> findByCourseIdAndStudentId(@Param("courseId") Long courseId, @Param("studentId") Long studentId);
+    List<SalesRecordJpaEntity> findByCourse_IdAndStudentId(Long courseId, Long studentId);
 }

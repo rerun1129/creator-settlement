@@ -79,7 +79,7 @@ public class JpaSalesRepository implements SalesRepository {
 
     @Override
     public List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
-        return salesDataRepository.findByCourseIdAndStudentId(courseId.value(), studentId.value())
+        return salesDataRepository.findByCourse_IdAndStudentId(courseId.value(), studentId.value())
                 .stream()
                 .map(entity -> new SalesRecordWithId(
                         SalesRecordId.of(entity.getId()),
