@@ -41,6 +41,11 @@ public class InMemorySalesRepository implements SalesRepository {
     }
 
     @Override
+    public boolean existsById(SalesRecordId salesRecordId) {
+        return salesById.containsKey(salesRecordId);
+    }
+
+    @Override
     public Optional<SalesRecord> findById(SalesRecordId salesRecordId) {
         return Optional.ofNullable(salesById.get(salesRecordId));
     }

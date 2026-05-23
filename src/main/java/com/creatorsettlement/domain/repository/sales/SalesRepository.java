@@ -15,6 +15,8 @@ public interface SalesRepository {
 
     void saveSalesRecord(SalesRecord salesRecord);
 
+    boolean existsById(SalesRecordId salesRecordId);
+
     Optional<SalesRecord> findById(SalesRecordId salesRecordId);
 
     List<CancellationRecord> findCancellationsBySalesRecordId(SalesRecordId salesRecordId);

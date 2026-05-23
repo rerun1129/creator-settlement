@@ -41,6 +41,11 @@ public class JpaSalesRepository implements SalesRepository {
     }
 
     @Override
+    public boolean existsById(SalesRecordId salesRecordId) {
+        return salesDataRepository.existsById(salesRecordId.value());
+    }
+
+    @Override
     public Optional<SalesRecord> findById(SalesRecordId salesRecordId) {
         return salesDataRepository.findById(salesRecordId.value()).map(SalesRecordMapper::toDomainSalesRecord);
     }
