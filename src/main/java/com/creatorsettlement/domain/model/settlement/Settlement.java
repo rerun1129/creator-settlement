@@ -1,5 +1,6 @@
 package com.creatorsettlement.domain.model.settlement;
 
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
@@ -22,6 +23,7 @@ public class Settlement {
     private final long salesCount;
     private final long cancellationCount;
     private OccurredAt confirmedAt;
+    private OccurredAt paidAt;
 
     private Settlement(
             CreatorId creatorId,
@@ -35,7 +37,8 @@ public class Settlement {
             SettlementAmount expectedPayout,
             long salesCount,
             long cancellationCount,
-            OccurredAt confirmedAt
+            OccurredAt confirmedAt,
+            OccurredAt paidAt
     ) {
         this.creatorId = creatorId;
         this.yearMonth = yearMonth;
@@ -49,6 +52,7 @@ public class Settlement {
         this.salesCount = salesCount;
         this.cancellationCount = cancellationCount;
         this.confirmedAt = confirmedAt;
+        this.paidAt = paidAt;
     }
 
     public static Settlement pendingSnapshot(
@@ -61,7 +65,7 @@ public class Settlement {
                 creatorId, yearMonth, SettlementStatus.PENDING,
                 totalSales, totalRefund, netSales,
                 feeRate, platformFee, expectedPayout,
-                salesCount, cancellationCount, null
+                salesCount, cancellationCount, null, null
         );
     }
 
@@ -76,7 +80,22 @@ public class Settlement {
                 creatorId, yearMonth, SettlementStatus.CONFIRMED,
                 totalSales, totalRefund, netSales,
                 feeRate, platformFee, expectedPayout,
-                salesCount, cancellationCount, confirmedAt
+                salesCount, cancellationCount, confirmedAt, null
+        );
+    }
+
+    public static Settlement paidSnapshot(
+            CreatorId creatorId, YearMonth yearMonth,
+            Money totalSales, Money totalRefund, SettlementAmount netSales,
+            FeeRate feeRate, Money platformFee, SettlementAmount expectedPayout,
+            long salesCount, long cancellationCount,
+            OccurredAt confirmedAt, OccurredAt paidAt
+    ) {
+        return new Settlement(
+                creatorId, yearMonth, SettlementStatus.PAID,
+                totalSales, totalRefund, netSales,
+                feeRate, platformFee, expectedPayout,
+                salesCount, cancellationCount, confirmedAt, paidAt
         );
     }
 
@@ -92,4 +111,21 @@ public class Settlement {
     public long salesCount() { return salesCount; }
     public long cancellationCount() { return cancellationCount; }
     public OccurredAt confirmedAt() { return confirmedAt; }
+    public OccurredAt paidAt() { return paidAt; }
+
+    public void confirm(OccurredAt occurredAt) {
+        switch (status) {
+            case PENDING -> { status = SettlementStatus.CONFIRMED; confirmedAt = occurredAt; }
+            case CONFIRMED -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_ALREADY_CONFIRMED.message());
+            case PAID -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_ALREADY_PAID.message());
+        }
+    }
+
+    public void pay(OccurredAt occurredAt) {
+        switch (status) {
+            case CONFIRMED -> { status = SettlementStatus.PAID; paidAt = occurredAt; }
+            case PENDING -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_CONFIRMED_FOR_PAYMENT.message());
+            case PAID -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_ALREADY_PAID.message());
+        }
+    }
 }

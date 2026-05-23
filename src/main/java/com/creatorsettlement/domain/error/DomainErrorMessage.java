@@ -16,7 +16,11 @@ public enum DomainErrorMessage {
     FEE_RATE_NULL("수수료율 정보가 누락되었습니다", 400),
     FEE_RATE_NEGATIVE("수수료율은 0% 이상이어야 합니다", 400),
     FEE_RATE_GREATER_THAN_ONE("수수료율은 100%를 초과할 수 없습니다", 400),
-    SETTLEMENT_AMOUNT_NULL("정산 금액이 누락되었습니다", 400);
+    SETTLEMENT_AMOUNT_NULL("정산 금액이 누락되었습니다", 400),
+    SETTLEMENT_NOT_FOUND("정산 내역을 찾을 수 없습니다", 404),
+    SETTLEMENT_ALREADY_CONFIRMED("이미 확정된 정산입니다", 409),
+    SETTLEMENT_ALREADY_PAID("이미 지급된 정산입니다", 409),
+    SETTLEMENT_NOT_CONFIRMED_FOR_PAYMENT("확정되지 않은 정산은 지급할 수 없습니다", 409);
 
     private final String message;
     private final int httpStatus;
