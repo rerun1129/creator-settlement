@@ -1,10 +1,14 @@
 package com.creatorsettlement.application.settlement;
 
+import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementView;
+import com.creatorsettlement.application.settlement.dto.PaySettlementCommand;
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.settlement.Settlement;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
+import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
@@ -53,5 +57,27 @@ public class SettlementServiceImpl implements SettlementService {
                 FeeRate.defaultRate()
         );
         return MonthlySettlementView.from(pending);
+    }
+
+    @Override
+    @Transactional
+    public void confirm(ConfirmSettlementCommand command) {
+        CreatorId creatorId = CreatorId.of(command.creatorId());
+        Settlement settlement = settlementRepository
+                .findByCreatorIdAndYearMonth(creatorId, command.yearMonth())
+                .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_FOUND.message()));
+        settlement.confirm(OccurredAt.of(command.confirmedAt()));
+        settlementRepository.save(settlement);
+    }
+
+    @Override
+    @Transactional
+    public void pay(PaySettlementCommand command) {
+        CreatorId creatorId = CreatorId.of(command.creatorId());
+        Settlement settlement = settlementRepository
+                .findByCreatorIdAndYearMonth(creatorId, command.yearMonth())
+                .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_FOUND.message()));
+        settlement.pay(OccurredAt.of(command.paidAt()));
+        settlementRepository.save(settlement);
     }
 }

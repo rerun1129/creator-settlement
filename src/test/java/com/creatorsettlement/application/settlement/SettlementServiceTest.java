@@ -1,7 +1,9 @@
 package com.creatorsettlement.application.settlement;
 
+import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementView;
+import com.creatorsettlement.application.settlement.dto.PaySettlementCommand;
 import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("SettlementService 단위 테스트")
 class SettlementServiceTest {
@@ -185,5 +188,211 @@ class SettlementServiceTest {
         // Then
         assertThat(responseA.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("15000"));
         assertThat(responseA.salesCount()).isEqualTo(1L);
+    }
+
+    // --- confirm 시나리오 ---
+
+    @Test
+    @DisplayName("PENDING으로 저장된 Settlement에 confirm 호출 시 status가 CONFIRMED로 전이되고 confirmedAt이 보존된다")
+    void confirm_changes_status_to_CONFIRMED_when_stored_PENDING() {
+        // Given
+        CreatorId creatorId = CreatorId.of(50L);
+        YearMonth yearMonth = YearMonth.of(2026, 7);
+        settlementRepository.save(pendingFixture(creatorId, yearMonth));
+        LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 1, 9, 0);
+
+        // When
+        service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime));
+
+        // Then
+        Settlement result = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
+        assertThat(result.status()).isEqualTo(SettlementStatus.CONFIRMED);
+        assertThat(result.confirmedAt().value()).isEqualTo(confirmedAtLocalDateTime);
+    }
+
+    @Test
+    @DisplayName("저장된 Settlement 없을 때 confirm 호출 시 정산 내역을 찾을 수 없다는 예외가 발생한다")
+    void confirm_throws_SETTLEMENT_NOT_FOUND_when_not_stored() {
+        // Given
+        CreatorId creatorId = CreatorId.of(51L);
+        YearMonth yearMonth = YearMonth.of(2026, 7);
+        LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 1, 9, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("정산 내역을 찾을 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("CONFIRMED 상태 Settlement에 confirm 재호출 시 도메인의 이미 확정된 정산 예외가 전파된다")
+    void confirm_propagates_ALREADY_CONFIRMED_from_domain() {
+        // Given
+        CreatorId creatorId = CreatorId.of(52L);
+        YearMonth yearMonth = YearMonth.of(2026, 7);
+        settlementRepository.save(confirmedFixture(creatorId, yearMonth));
+        LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 2, 9, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 확정된 정산입니다");
+    }
+
+    @Test
+    @DisplayName("PAID 상태 Settlement에 confirm 호출 시 도메인의 이미 지급된 정산 예외가 전파된다")
+    void confirm_propagates_ALREADY_PAID_from_domain() {
+        // Given
+        CreatorId creatorId = CreatorId.of(53L);
+        YearMonth yearMonth = YearMonth.of(2026, 7);
+        settlementRepository.save(paidFixture(creatorId, yearMonth));
+        LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 3, 9, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 지급된 정산입니다");
+    }
+
+    @Test
+    @DisplayName("confirm 처리 후 Settlement는 repository에 저장되어 후속 조회에서 CONFIRMED로 확인된다")
+    void confirm_persists_via_repository_save() {
+        // Given
+        CreatorId creatorId = CreatorId.of(54L);
+        YearMonth yearMonth = YearMonth.of(2026, 7);
+        settlementRepository.save(pendingFixture(creatorId, yearMonth));
+        LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 4, 9, 0);
+
+        // When
+        service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime));
+
+        // Then
+        Settlement persisted = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
+        assertThat(persisted.status()).isEqualTo(SettlementStatus.CONFIRMED);
+    }
+
+    // --- pay 시나리오 ---
+
+    @Test
+    @DisplayName("CONFIRMED로 저장된 Settlement에 pay 호출 시 status가 PAID로 전이되고 paidAt이 보존된다")
+    void pay_changes_status_to_PAID_when_stored_CONFIRMED() {
+        // Given
+        CreatorId creatorId = CreatorId.of(60L);
+        YearMonth yearMonth = YearMonth.of(2026, 8);
+        settlementRepository.save(confirmedFixture(creatorId, yearMonth));
+        LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 1, 9, 0);
+
+        // When
+        service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime));
+
+        // Then
+        Settlement result = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
+        assertThat(result.status()).isEqualTo(SettlementStatus.PAID);
+        assertThat(result.paidAt().value()).isEqualTo(paidAtLocalDateTime);
+    }
+
+    @Test
+    @DisplayName("저장된 Settlement 없을 때 pay 호출 시 정산 내역을 찾을 수 없다는 예외가 발생한다")
+    void pay_throws_SETTLEMENT_NOT_FOUND_when_not_stored() {
+        // Given
+        CreatorId creatorId = CreatorId.of(61L);
+        YearMonth yearMonth = YearMonth.of(2026, 8);
+        LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 1, 9, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("정산 내역을 찾을 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("PENDING 상태 Settlement에 pay 호출 시 도메인의 확정되지 않은 정산 예외가 전파된다")
+    void pay_propagates_NOT_CONFIRMED_FOR_PAYMENT_from_domain_when_PENDING() {
+        // Given
+        CreatorId creatorId = CreatorId.of(62L);
+        YearMonth yearMonth = YearMonth.of(2026, 8);
+        settlementRepository.save(pendingFixture(creatorId, yearMonth));
+        LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 2, 9, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("확정되지 않은 정산은 지급할 수 없습니다");
+    }
+
+    @Test
+    @DisplayName("PAID 상태 Settlement에 pay 재호출 시 도메인의 이미 지급된 정산 예외가 전파된다")
+    void pay_propagates_ALREADY_PAID_from_domain() {
+        // Given
+        CreatorId creatorId = CreatorId.of(63L);
+        YearMonth yearMonth = YearMonth.of(2026, 8);
+        settlementRepository.save(paidFixture(creatorId, yearMonth));
+        LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 3, 9, 0);
+
+        // When & Then
+        assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("이미 지급된 정산입니다");
+    }
+
+    @Test
+    @DisplayName("pay 처리 후 Settlement는 repository에 저장되어 후속 조회에서 PAID로 확인된다")
+    void pay_persists_via_repository_save() {
+        // Given
+        CreatorId creatorId = CreatorId.of(64L);
+        YearMonth yearMonth = YearMonth.of(2026, 8);
+        settlementRepository.save(confirmedFixture(creatorId, yearMonth));
+        LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 4, 9, 0);
+
+        // When
+        service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime));
+
+        // Then
+        Settlement persisted = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
+        assertThat(persisted.status()).isEqualTo(SettlementStatus.PAID);
+    }
+
+    // --- 픽스처 헬퍼 ---
+
+    private Settlement pendingFixture(CreatorId creatorId, YearMonth yearMonth) {
+        return Settlement.pendingSnapshot(
+                creatorId, yearMonth,
+                Money.of(new BigDecimal("100000")),
+                Money.of(new BigDecimal("10000")),
+                SettlementAmount.of(new BigDecimal("90000")),
+                FeeRate.defaultRate(),
+                Money.of(new BigDecimal("18000")),
+                SettlementAmount.of(new BigDecimal("72000")),
+                5L, 1L
+        );
+    }
+
+    private Settlement confirmedFixture(CreatorId creatorId, YearMonth yearMonth) {
+        return Settlement.confirmedSnapshot(
+                creatorId, yearMonth,
+                Money.of(new BigDecimal("100000")),
+                Money.of(new BigDecimal("10000")),
+                SettlementAmount.of(new BigDecimal("90000")),
+                FeeRate.defaultRate(),
+                Money.of(new BigDecimal("18000")),
+                SettlementAmount.of(new BigDecimal("72000")),
+                5L, 1L,
+                OccurredAt.of(LocalDateTime.of(2026, 8, 1, 9, 0))
+        );
+    }
+
+    private Settlement paidFixture(CreatorId creatorId, YearMonth yearMonth) {
+        return Settlement.paidSnapshot(
+                creatorId, yearMonth,
+                Money.of(new BigDecimal("100000")),
+                Money.of(new BigDecimal("10000")),
+                SettlementAmount.of(new BigDecimal("90000")),
+                FeeRate.defaultRate(),
+                Money.of(new BigDecimal("18000")),
+                SettlementAmount.of(new BigDecimal("72000")),
+                5L, 1L,
+                OccurredAt.of(LocalDateTime.of(2026, 8, 1, 9, 0)),
+                OccurredAt.of(LocalDateTime.of(2026, 9, 1, 9, 0))
+        );
     }
 }
