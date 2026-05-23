@@ -11,6 +11,7 @@ import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.settlement.Settlement;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
+import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.repository.creator.CreatorRepository;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
@@ -20,11 +21,11 @@ import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
 import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
+import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.HashMap;
@@ -40,17 +41,20 @@ public class SettlementServiceImpl implements SettlementService {
     private final SalesRepository salesRepository;
     private final CreatorRepository creatorRepository;
     private final MonthlySettlementCalculator monthlySettlementCalculator;
+    private final SettlementAmountCalculator settlementAmountCalculator;
 
     public SettlementServiceImpl(
             SettlementRepository settlementRepository,
             SalesRepository salesRepository,
             CreatorRepository creatorRepository,
-            MonthlySettlementCalculator monthlySettlementCalculator
+            MonthlySettlementCalculator monthlySettlementCalculator,
+            SettlementAmountCalculator settlementAmountCalculator
     ) {
         this.settlementRepository = settlementRepository;
         this.salesRepository = salesRepository;
         this.creatorRepository = creatorRepository;
         this.monthlySettlementCalculator = monthlySettlementCalculator;
+        this.settlementAmountCalculator = settlementAmountCalculator;
     }
 
     @Override
@@ -101,16 +105,13 @@ public class SettlementServiceImpl implements SettlementService {
             totalRefundByCreator.merge(view.creatorId(), view.record().getRefundAmount().value(), BigDecimal::add);
         }
 
-        BigDecimal feeRate = FeeRate.defaultRate().value();
+        FeeRate feeRate = FeeRate.defaultRate();
         List<CreatorPayableView> responses = allCreatorIds.stream()
                 .map(creatorId -> {
                     BigDecimal totalSales = totalSalesByCreator.getOrDefault(creatorId, BigDecimal.ZERO);
                     BigDecimal totalRefund = totalRefundByCreator.getOrDefault(creatorId, BigDecimal.ZERO);
-                    BigDecimal net = totalSales.subtract(totalRefund);
-                    BigDecimal fee = net.signum() < 0
-                            ? BigDecimal.ZERO
-                            : net.multiply(feeRate).setScale(0, RoundingMode.HALF_UP);
-                    BigDecimal expectedSettlementAmount = net.subtract(fee);
+                    BigDecimal expectedSettlementAmount = settlementAmountCalculator.calculateExpectedPayout(
+                            Money.of(totalSales), Money.of(totalRefund), feeRate);
                     return new CreatorPayableView(creatorId.value(), expectedSettlementAmount);
                 })
                 .toList();
