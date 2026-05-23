@@ -5,6 +5,7 @@ import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
 
 import java.time.YearMonth;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,5 +24,10 @@ public class InMemorySettlementRepository implements SettlementRepository {
     @Override
     public Optional<Settlement> findByCreatorIdAndYearMonth(CreatorId creatorId, YearMonth yearMonth) {
         return Optional.ofNullable(store.get(new Key(creatorId, yearMonth)));
+    }
+
+    @Override
+    public List<Settlement> findByYearMonthRange(YearMonth fromInclusive, YearMonth toInclusive) {
+        throw new UnsupportedOperationException("단계 3 어플리케이션 GREEN에서 구현");
     }
 }

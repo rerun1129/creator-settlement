@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -37,5 +38,10 @@ public class JpaSettlementRepository implements SettlementRepository {
         } else {
             dataRepository.save(SettlementMapper.toEntity(settlement));
         }
+    }
+
+    @Override
+    public List<Settlement> findByYearMonthRange(YearMonth fromInclusive, YearMonth toInclusive) {
+        throw new UnsupportedOperationException("단계 5에서 구현");
     }
 }

@@ -5,6 +5,8 @@ import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.repository.creator.CreatorRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class JpaCreatorRepository implements CreatorRepository {
 
@@ -22,5 +24,10 @@ public class JpaCreatorRepository implements CreatorRepository {
     @Override
     public boolean existsByCreatorId(CreatorId creatorId) {
         return dataRepository.existsById(creatorId.value());
+    }
+
+    @Override
+    public List<CreatorId> findAllCreatorIds() {
+        throw new UnsupportedOperationException("단계 5에서 구현");
     }
 }
