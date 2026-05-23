@@ -110,6 +110,10 @@ public class InMemorySalesRepository implements SalesRepository {
         return buildViews(sales);
     }
 
+    private Set<CourseId> courseIdSetOf(CreatorId creatorId) {
+        return new HashSet<>(courseRepository.findCourseIdsByCreatorId(creatorId));
+    }
+
     private List<SalesRecordView> buildViews(List<SalesRecordWithId> sales) {
         if (sales.isEmpty()) {
             return List.of();
@@ -140,33 +144,36 @@ public class InMemorySalesRepository implements SalesRepository {
 
     @Override
     public SalesSummary findSalesSummaryByCreatorAndMonth(CreatorId creatorId, YearMonth yearMonth) {
-        List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
-        if (courseIds.isEmpty()) {
+        Set<CourseId> courseIdSet = courseIdSetOf(creatorId);
+        if (courseIdSet.isEmpty()) {
             return new SalesSummary(Money.of(BigDecimal.ZERO), 0L);
         }
-        Set<CourseId> courseIdSet = new HashSet<>(courseIds);
         List<SalesRecord> filtered = salesById.values().stream()
-                .filter(r -> courseIdSet.contains(r.getCourseId()) && YearMonth.from(r.getPaidAt().value()).equals(yearMonth))
+                .filter(sale -> courseIdSet.contains(sale.getCourseId())
+                        && YearMonth.from(sale.getPaidAt().value()).equals(yearMonth))
                 .toList();
-        BigDecimal total = filtered.stream().map(r -> r.getPaymentAmount().value()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = filtered.stream()
+                .map(sale -> sale.getPaymentAmount().value())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new SalesSummary(Money.of(total), filtered.size());
     }
 
     @Override
     public CancellationSummary findCancellationSummaryByCreatorAndMonth(CreatorId creatorId, YearMonth yearMonth) {
-        List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
-        if (courseIds.isEmpty()) {
+        Set<CourseId> courseIdSet = courseIdSetOf(creatorId);
+        if (courseIdSet.isEmpty()) {
             return new CancellationSummary(Money.of(BigDecimal.ZERO), 0L);
         }
-        Set<CourseId> courseIdSet = new HashSet<>(courseIds);
         List<CancellationRecord> filtered = cancellations.stream()
-                .filter(c -> YearMonth.from(c.getCancelledAt().value()).equals(yearMonth))
-                .filter(c -> {
-                    SalesRecord sale = salesById.get(c.getSalesRecordId());
+                .filter(cancellation -> YearMonth.from(cancellation.getCancelledAt().value()).equals(yearMonth))
+                .filter(cancellation -> {
+                    SalesRecord sale = salesById.get(cancellation.getSalesRecordId());
                     return sale != null && courseIdSet.contains(sale.getCourseId());
                 })
                 .toList();
-        BigDecimal total = filtered.stream().map(c -> c.getRefundAmount().value()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal total = filtered.stream()
+                .map(cancellation -> cancellation.getRefundAmount().value())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new CancellationSummary(Money.of(total), filtered.size());
     }
 
