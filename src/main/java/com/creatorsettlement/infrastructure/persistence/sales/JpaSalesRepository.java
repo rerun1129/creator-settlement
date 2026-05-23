@@ -8,6 +8,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
 import jakarta.persistence.EntityManager;
@@ -77,7 +78,12 @@ public class JpaSalesRepository implements SalesRepository {
     }
 
     @Override
-    public boolean existsActiveSaleByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
-        return salesDataRepository.existsActiveSaleByCourseIdAndStudentId(courseId.value(), studentId.value());
+    public List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
+        return salesDataRepository.findByCourseIdAndStudentId(courseId.value(), studentId.value())
+                .stream()
+                .map(entity -> new SalesRecordWithId(
+                        SalesRecordId.of(entity.getId()),
+                        SalesRecordMapper.toDomainSalesRecord(entity)))
+                .toList();
     }
 }

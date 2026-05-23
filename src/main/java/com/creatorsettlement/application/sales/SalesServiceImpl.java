@@ -6,9 +6,9 @@ import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
-import com.creatorsettlement.domain.repository.course.CourseRepository;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.service.sales.RefundPolicy;
+import com.creatorsettlement.domain.service.sales.SaleRegistrationPolicy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,26 +18,21 @@ import java.util.List;
 public class SalesServiceImpl implements SalesService {
 
     private final SalesRepository salesRepository;
-    private final CourseRepository courseRepository;
     private final RefundPolicy refundPolicy;
+    private final SaleRegistrationPolicy saleRegistrationPolicy;
 
-    public SalesServiceImpl(SalesRepository salesRepository, CourseRepository courseRepository, RefundPolicy refundPolicy) {
+    public SalesServiceImpl(SalesRepository salesRepository, RefundPolicy refundPolicy, SaleRegistrationPolicy saleRegistrationPolicy) {
         this.salesRepository = salesRepository;
-        this.courseRepository = courseRepository;
         this.refundPolicy = refundPolicy;
+        this.saleRegistrationPolicy = saleRegistrationPolicy;
     }
 
     @Transactional
     @Override
     public void register(RegisterSaleCommand command) {
         CourseId courseId = CourseId.of(command.courseId());
-        if (!courseRepository.existsByCourseId(courseId)) {
-            throw new IllegalArgumentException(DomainErrorMessage.COURSE_NOT_FOUND_FOR_REGISTRATION.message());
-        }
         StudentId studentId = StudentId.of(command.studentId());
-        if (salesRepository.existsActiveSaleByCourseIdAndStudentId(courseId, studentId)) {
-            throw new IllegalArgumentException(DomainErrorMessage.DUPLICATE_ACTIVE_PURCHASE.message());
-        }
+        saleRegistrationPolicy.validateRegistrable(courseId, studentId);
         salesRepository.saveSalesRecord(command.toSalesRecord());
     }
 

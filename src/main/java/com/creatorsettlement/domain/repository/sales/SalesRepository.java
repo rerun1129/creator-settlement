@@ -24,5 +24,5 @@ public interface SalesRepository {
 
     List<SalesRecordView> findSalesView(Optional<CreatorId> creatorId, LocalDateTime from, LocalDateTime toExclusive);
 
-    boolean existsActiveSaleByCourseIdAndStudentId(CourseId courseId, StudentId studentId);
+    List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId);
 }

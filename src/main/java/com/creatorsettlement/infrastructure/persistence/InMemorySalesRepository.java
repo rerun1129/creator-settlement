@@ -127,10 +127,11 @@ public class InMemorySalesRepository implements SalesRepository {
     }
 
     @Override
-    public boolean existsActiveSaleByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
+    public List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
         return salesById.entrySet().stream()
                 .filter(e -> e.getValue().getCourseId().equals(courseId) && e.getValue().getStudentId().equals(studentId))
-                .anyMatch(e -> e.getValue().getPaymentAmount().value().compareTo(sumRefundsBySalesRecordId(e.getKey()).value()) > 0);
+                .map(e -> new SalesRecordWithId(e.getKey(), e.getValue()))
+                .toList();
     }
 
     public List<SalesRecord> findAll() {
