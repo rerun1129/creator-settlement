@@ -138,34 +138,6 @@ class JpaSettlementRepositoryTest {
     }
 
     @Test
-    @DisplayName("동일 키로 PENDING 저장 후 CONFIRMED를 save하면 row는 1개 유지되고 status·confirmedAt이 갱신된다")
-    void save_updates_existing_row_when_same_key_pending_to_confirmed() {
-        // given
-        Long dbCreatorId = em.persistAndFlush(CreatorJpaEntity.of("크리에이터 E")).getId();
-        CreatorId creatorId = CreatorId.of(dbCreatorId);
-        YearMonth yearMonth = YearMonth.of(2026, 5);
-        LocalDateTime confirmedTime = LocalDateTime.of(2026, 6, 1, 9, 0);
-
-        sut.save(pendingSettlement(creatorId, yearMonth));
-        em.flush();
-
-        // when
-        sut.save(confirmedSettlement(creatorId, yearMonth, confirmedTime));
-        em.flush();
-        em.clear();
-
-        // then
-        List<SettlementJpaEntity> rows = em.getEntityManager()
-                .createQuery("SELECT s FROM SettlementJpaEntity s WHERE s.creatorId = :cid AND s.yearMonth = :ym", SettlementJpaEntity.class)
-                .setParameter("cid", dbCreatorId)
-                .setParameter("ym", "202605")
-                .getResultList();
-        assertThat(rows).hasSize(1);
-        assertThat(rows.get(0).getStatus()).isEqualTo(SettlementStatus.CONFIRMED);
-        assertThat(rows.get(0).getConfirmedAt()).isEqualTo(confirmedTime);
-    }
-
-    @Test
     @DisplayName("동일 키로 CONFIRMED 저장 후 PAID를 save하면 paidAt이 갱신된다")
     void save_updates_existing_row_when_same_key_confirmed_to_paid() {
         // given

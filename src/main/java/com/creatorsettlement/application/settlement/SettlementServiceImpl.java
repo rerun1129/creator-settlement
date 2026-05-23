@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.YearMonth;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -42,27 +41,20 @@ public class SettlementServiceImpl implements SettlementService {
     public MonthlySettlementView getMonthlySettlement(MonthlySettlementQuery query) {
         CreatorId creatorId = CreatorId.of(query.creatorId());
         YearMonth ym = query.yearMonth();
-
-        Optional<Settlement> stored = settlementRepository.findByCreatorIdAndYearMonth(creatorId, ym);
-        if (stored.isPresent()) {
-            return MonthlySettlementView.from(stored.get());
-        }
-
-        SalesSummary sa = salesRepository.findSalesSummaryByCreatorAndMonth(creatorId, ym);
-        CancellationSummary ca = salesRepository.findCancellationSummaryByCreatorAndMonth(creatorId, ym);
-        Settlement pending = monthlySettlementCalculator.calculate(
-                creatorId, ym,
-                sa.totalAmount(), ca.totalRefund(),
-                sa.count(), ca.count(),
-                FeeRate.defaultRate()
-        );
-        return MonthlySettlementView.from(pending);
+        Settlement settlement = settlementRepository
+                .findByCreatorIdAndYearMonth(creatorId, ym)
+                .orElseGet(() -> calculatePending(creatorId, ym));
+        return MonthlySettlementView.from(settlement);
     }
 
     @Override
     @Transactional
     public void confirm(ConfirmSettlementCommand command) {
-        Settlement settlement = loadOrThrow(CreatorId.of(command.creatorId()), command.yearMonth());
+        CreatorId creatorId = CreatorId.of(command.creatorId());
+        YearMonth ym = command.yearMonth();
+        Settlement settlement = settlementRepository
+                .findByCreatorIdAndYearMonth(creatorId, ym)
+                .orElseGet(() -> calculatePending(creatorId, ym));
         settlement.confirm(OccurredAt.of(command.confirmedAt()));
         settlementRepository.save(settlement);
     }
@@ -73,6 +65,17 @@ public class SettlementServiceImpl implements SettlementService {
         Settlement settlement = loadOrThrow(CreatorId.of(command.creatorId()), command.yearMonth());
         settlement.pay(OccurredAt.of(command.paidAt()));
         settlementRepository.save(settlement);
+    }
+
+    private Settlement calculatePending(CreatorId creatorId, YearMonth yearMonth) {
+        SalesSummary sa = salesRepository.findSalesSummaryByCreatorAndMonth(creatorId, yearMonth);
+        CancellationSummary ca = salesRepository.findCancellationSummaryByCreatorAndMonth(creatorId, yearMonth);
+        return monthlySettlementCalculator.calculate(
+                creatorId, yearMonth,
+                sa.totalAmount(), ca.totalRefund(),
+                sa.count(), ca.count(),
+                FeeRate.defaultRate()
+        );
     }
 
     private Settlement loadOrThrow(CreatorId creatorId, YearMonth yearMonth) {

@@ -211,17 +211,36 @@ class SettlementServiceTest {
     }
 
     @Test
-    @DisplayName("저장된 Settlement 없을 때 confirm 호출 시 정산 내역을 찾을 수 없다는 예외가 발생한다")
-    void confirm_throws_SETTLEMENT_NOT_FOUND_when_not_stored() {
+    @DisplayName("저장된 Settlement가 없을 때 confirm 호출 시 sales 집계로 산출 + CONFIRMED 상태로 신규 저장된다")
+    void confirm_inserts_CONFIRMED_when_not_stored() {
         // Given
         CreatorId creatorId = CreatorId.of(51L);
         YearMonth yearMonth = YearMonth.of(2026, 7);
+        CourseId courseId = CourseId.of(510L);
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의E"));
+
+        SalesRecord sale1 = SalesRecord.of(courseId, StudentId.of(10L), Money.of(new BigDecimal("30000")), OccurredAt.of(LocalDateTime.of(2026, 7, 5, 10, 0)));
+        SalesRecord sale2 = SalesRecord.of(courseId, StudentId.of(11L), Money.of(new BigDecimal("20000")), OccurredAt.of(LocalDateTime.of(2026, 7, 15, 10, 0)));
+        salesRepository.saveSalesRecord(sale1);
+        salesRepository.saveSalesRecord(sale2);
+
+        SalesRecordId salesRecordId1 = SalesRecordId.of(1L);
+        CancellationRecord cancellation = CancellationRecord.of(salesRecordId1, Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 7, 20, 10, 0)));
+        salesRepository.saveCancellationRecord(cancellation);
+
         LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 1, 9, 0);
 
-        // When & Then
-        assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime)))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("정산 내역을 찾을 수 없습니다");
+        // When
+        service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime));
+
+        // Then
+        Settlement persisted = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
+        assertThat(persisted.status()).isEqualTo(SettlementStatus.CONFIRMED);
+        assertThat(persisted.confirmedAt().value()).isEqualTo(confirmedAtLocalDateTime);
+        assertThat(persisted.totalSales().value()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("50000"));
+        assertThat(persisted.totalRefund().value()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("10000"));
+        assertThat(persisted.salesCount()).isEqualTo(2L);
+        assertThat(persisted.cancellationCount()).isEqualTo(1L);
     }
 
     @Test
