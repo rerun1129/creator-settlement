@@ -64,13 +64,17 @@ class SettlementJpaEntity extends BaseTimeEntity {
     @Column(name = "confirmed_at")
     private LocalDateTime confirmedAt;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     protected SettlementJpaEntity() {}
 
     static SettlementJpaEntity of(
             Long creatorId, String yearMonth, SettlementStatus status,
             BigDecimal totalSales, BigDecimal totalRefund, BigDecimal netSales,
             BigDecimal feeRate, BigDecimal platformFee, BigDecimal expectedPayout,
-            long salesCount, long cancellationCount, LocalDateTime confirmedAt
+            long salesCount, long cancellationCount,
+            LocalDateTime confirmedAt, LocalDateTime paidAt
     ) {
         SettlementJpaEntity e = new SettlementJpaEntity();
         e.creatorId = creatorId;
@@ -85,7 +89,14 @@ class SettlementJpaEntity extends BaseTimeEntity {
         e.salesCount = salesCount;
         e.cancellationCount = cancellationCount;
         e.confirmedAt = confirmedAt;
+        e.paidAt = paidAt;
         return e;
+    }
+
+    void applyStateTransition(SettlementStatus status, LocalDateTime confirmedAt, LocalDateTime paidAt) {
+        this.status = status;
+        this.confirmedAt = confirmedAt;
+        this.paidAt = paidAt;
     }
 
     Long getId() { return id; }
@@ -101,4 +112,5 @@ class SettlementJpaEntity extends BaseTimeEntity {
     long getSalesCount() { return salesCount; }
     long getCancellationCount() { return cancellationCount; }
     LocalDateTime getConfirmedAt() { return confirmedAt; }
+    LocalDateTime getPaidAt() { return paidAt; }
 }

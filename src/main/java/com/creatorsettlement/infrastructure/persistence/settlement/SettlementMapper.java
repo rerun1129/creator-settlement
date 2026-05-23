@@ -29,7 +29,8 @@ class SettlementMapper {
             d.expectedPayout().value(),
             d.salesCount(),
             d.cancellationCount(),
-            d.confirmedAt() == null ? null : d.confirmedAt().value()
+            d.confirmedAt() == null ? null : d.confirmedAt().value(),
+            d.paidAt() == null ? null : d.paidAt().value()
         );
     }
 
@@ -53,7 +54,20 @@ class SettlementMapper {
                     feeRate, platformFee, expectedPayout,
                     e.getSalesCount(), e.getCancellationCount(),
                     OccurredAt.of(e.getConfirmedAt()));
-            case PAID -> throw new IllegalStateException("PAID Settlement 복원은 정산 지급 기능에서 도입 예정");
+            case PAID -> Settlement.paidSnapshot(
+                    creatorId, ym, totalSales, totalRefund, netSales,
+                    feeRate, platformFee, expectedPayout,
+                    e.getSalesCount(), e.getCancellationCount(),
+                    OccurredAt.of(e.getConfirmedAt()),
+                    OccurredAt.of(e.getPaidAt()));
         };
+    }
+
+    static void applyTo(SettlementJpaEntity entity, Settlement domain) {
+        entity.applyStateTransition(
+            domain.status(),
+            domain.confirmedAt() == null ? null : domain.confirmedAt().value(),
+            domain.paidAt() == null ? null : domain.paidAt().value()
+        );
     }
 }

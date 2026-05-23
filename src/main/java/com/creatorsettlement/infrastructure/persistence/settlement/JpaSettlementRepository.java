@@ -29,6 +29,13 @@ public class JpaSettlementRepository implements SettlementRepository {
 
     @Override
     public void save(Settlement settlement) {
-        dataRepository.save(SettlementMapper.toEntity(settlement));
+        String ymString = settlement.yearMonth().format(YEAR_MONTH_FORMAT);
+        Optional<SettlementJpaEntity> existing =
+                dataRepository.findByCreatorIdAndYearMonth(settlement.creatorId().value(), ymString);
+        if (existing.isPresent()) {
+            SettlementMapper.applyTo(existing.get(), settlement);
+        } else {
+            dataRepository.save(SettlementMapper.toEntity(settlement));
+        }
     }
 }
