@@ -62,10 +62,7 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     public void confirm(ConfirmSettlementCommand command) {
-        CreatorId creatorId = CreatorId.of(command.creatorId());
-        Settlement settlement = settlementRepository
-                .findByCreatorIdAndYearMonth(creatorId, command.yearMonth())
-                .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_FOUND.message()));
+        Settlement settlement = loadOrThrow(CreatorId.of(command.creatorId()), command.yearMonth());
         settlement.confirm(OccurredAt.of(command.confirmedAt()));
         settlementRepository.save(settlement);
     }
@@ -73,11 +70,13 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     public void pay(PaySettlementCommand command) {
-        CreatorId creatorId = CreatorId.of(command.creatorId());
-        Settlement settlement = settlementRepository
-                .findByCreatorIdAndYearMonth(creatorId, command.yearMonth())
-                .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_FOUND.message()));
+        Settlement settlement = loadOrThrow(CreatorId.of(command.creatorId()), command.yearMonth());
         settlement.pay(OccurredAt.of(command.paidAt()));
         settlementRepository.save(settlement);
+    }
+
+    private Settlement loadOrThrow(CreatorId creatorId, YearMonth yearMonth) {
+        return settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth)
+                .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_FOUND.message()));
     }
 }
