@@ -6,6 +6,8 @@ import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
+import com.creatorsettlement.domain.repository.sales.CancellationSummary;
+import com.creatorsettlement.domain.repository.sales.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
@@ -15,6 +17,7 @@ import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -90,5 +93,15 @@ public class JpaSalesRepository implements SalesRepository {
                         SalesRecordId.of(entity.getId()),
                         SalesRecordMapper.toDomainSalesRecord(entity)))
                 .toList();
+    }
+
+    @Override
+    public SalesSummary findSalesSummaryByCreatorAndMonth(CreatorId creatorId, YearMonth yearMonth) {
+        throw new UnsupportedOperationException("Phase 3 JPA 구현 예정");
+    }
+
+    @Override
+    public CancellationSummary findCancellationSummaryByCreatorAndMonth(CreatorId creatorId, YearMonth yearMonth) {
+        throw new UnsupportedOperationException("Phase 3 JPA 구현 예정");
     }
 }

@@ -1,0 +1,187 @@
+package com.creatorsettlement.application.settlement;
+
+import com.creatorsettlement.domain.model.course.Course;
+import com.creatorsettlement.domain.model.sales.CancellationRecord;
+import com.creatorsettlement.domain.model.sales.SalesRecord;
+import com.creatorsettlement.domain.model.settlement.Settlement;
+import com.creatorsettlement.domain.model.settlement.SettlementStatus;
+import com.creatorsettlement.domain.model.vo.CourseId;
+import com.creatorsettlement.domain.model.vo.CreatorId;
+import com.creatorsettlement.domain.model.vo.FeeRate;
+import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.OccurredAt;
+import com.creatorsettlement.domain.model.vo.SalesRecordId;
+import com.creatorsettlement.domain.model.vo.SettlementAmount;
+import com.creatorsettlement.domain.model.vo.StudentId;
+import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
+import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
+import com.creatorsettlement.infrastructure.persistence.InMemorySettlementRepository;
+import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("SettlementService 단위 테스트")
+class SettlementServiceTest {
+
+    private InMemorySettlementRepository settlementRepository;
+    private InMemorySalesRepository salesRepository;
+    private InMemoryCourseRepository courseRepository;
+    private SettlementService service;
+
+    @BeforeEach
+    void setUp() {
+        settlementRepository = new InMemorySettlementRepository();
+        courseRepository = new InMemoryCourseRepository();
+        salesRepository = new InMemorySalesRepository(courseRepository);
+        service = new SettlementServiceImpl(
+                settlementRepository,
+                salesRepository,
+                new MonthlySettlementCalculator()
+        );
+    }
+
+    @Test
+    @DisplayName("저장된 Settlement가 있으면 그 스냅샷을 응답으로 반환한다")
+    void returns_stored_snapshot_when_settlement_exists() {
+        // Given
+        CreatorId creatorId = CreatorId.of(1L);
+        YearMonth yearMonth = YearMonth.of(2026, 4);
+        Settlement stored = Settlement.pendingSnapshot(
+                creatorId, yearMonth,
+                Money.of(new BigDecimal("50000")),
+                Money.of(new BigDecimal("5000")),
+                SettlementAmount.of(new BigDecimal("45000")),
+                FeeRate.defaultRate(),
+                Money.of(new BigDecimal("9000")),
+                SettlementAmount.of(new BigDecimal("36000")),
+                3L, 1L
+        );
+        settlementRepository.save(stored);
+
+        MonthlySettlementQuery command = new MonthlySettlementQuery(1L, yearMonth);
+
+        // When
+        MonthlySettlementView response = service.getMonthlySettlement(command);
+
+        // Then
+        assertThat(response.creatorId()).isEqualTo(1L);
+        assertThat(response.yearMonth()).isEqualTo(yearMonth);
+        assertThat(response.status()).isEqualTo(SettlementStatus.PENDING);
+        assertThat(response.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("50000"));
+        assertThat(response.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("5000"));
+        assertThat(response.netSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("45000"));
+        assertThat(response.platformFee()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("9000"));
+        assertThat(response.expectedPayout()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("36000"));
+        assertThat(response.salesCount()).isEqualTo(3L);
+        assertThat(response.cancellationCount()).isEqualTo(1L);
+        assertThat(response.confirmedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("저장된 게 없으면 sales 집계로 PENDING 산출한다")
+    void computes_pending_when_no_stored_settlement() {
+        // Given
+        CreatorId creatorId = CreatorId.of(10L);
+        YearMonth yearMonth = YearMonth.of(2026, 5);
+        CourseId courseId = CourseId.of(100L);
+
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의A"));
+
+        SalesRecord sale1 = SalesRecord.of(courseId, StudentId.of(1L), Money.of(new BigDecimal("30000")), OccurredAt.of(LocalDateTime.of(2026, 5, 10, 10, 0)));
+        SalesRecord sale2 = SalesRecord.of(courseId, StudentId.of(2L), Money.of(new BigDecimal("20000")), OccurredAt.of(LocalDateTime.of(2026, 5, 20, 10, 0)));
+        salesRepository.saveSalesRecord(sale1);
+        salesRepository.saveSalesRecord(sale2);
+
+        SalesRecordId salesRecordId1 = SalesRecordId.of(1L);
+        CancellationRecord cancellation = CancellationRecord.of(salesRecordId1, Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 5, 15, 10, 0)));
+        salesRepository.saveCancellationRecord(cancellation);
+
+        MonthlySettlementQuery command = new MonthlySettlementQuery(10L, yearMonth);
+
+        // When
+        MonthlySettlementView response = service.getMonthlySettlement(command);
+
+        // Then
+        assertThat(response.status()).isEqualTo(SettlementStatus.PENDING);
+        assertThat(response.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("50000"));
+        assertThat(response.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("10000"));
+        assertThat(response.salesCount()).isEqualTo(2L);
+        assertThat(response.cancellationCount()).isEqualTo(1L);
+        assertThat(response.feeRate()).usingComparator(BigDecimal::compareTo).isEqualTo(FeeRate.defaultRate().value());
+    }
+
+    @Test
+    @DisplayName("활동 없는 월은 0금액 PENDING을 반환한다")
+    void returns_zero_pending_when_no_activity() {
+        // Given
+        MonthlySettlementQuery command = new MonthlySettlementQuery(99L, YearMonth.of(2026, 3));
+
+        // When
+        MonthlySettlementView response = service.getMonthlySettlement(command);
+
+        // Then
+        assertThat(response.status()).isEqualTo(SettlementStatus.PENDING);
+        assertThat(response.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
+        assertThat(response.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
+        assertThat(response.salesCount()).isEqualTo(0L);
+        assertThat(response.cancellationCount()).isEqualTo(0L);
+    }
+
+    @Test
+    @DisplayName("환불은 결제월이 아닌 취소월에 합산된다")
+    void refund_attributed_to_cancellation_month_not_payment_month() {
+        // Given
+        CreatorId creatorId = CreatorId.of(20L);
+        CourseId courseId = CourseId.of(200L);
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의B"));
+
+        SalesRecord sale = SalesRecord.of(courseId, StudentId.of(3L), Money.of(new BigDecimal("40000")), OccurredAt.of(LocalDateTime.of(2026, 4, 15, 10, 0)));
+        salesRepository.saveSalesRecord(sale);
+
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+        CancellationRecord cancellation = CancellationRecord.of(salesRecordId, Money.of(new BigDecimal("40000")), OccurredAt.of(LocalDateTime.of(2026, 5, 3, 10, 0)));
+        salesRepository.saveCancellationRecord(cancellation);
+
+        // When
+        MonthlySettlementView aprilResponse = service.getMonthlySettlement(new MonthlySettlementQuery(20L, YearMonth.of(2026, 4)));
+        MonthlySettlementView mayResponse = service.getMonthlySettlement(new MonthlySettlementQuery(20L, YearMonth.of(2026, 5)));
+
+        // Then
+        assertThat(aprilResponse.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("40000"));
+        assertThat(aprilResponse.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
+
+        assertThat(mayResponse.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
+        assertThat(mayResponse.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("40000"));
+    }
+
+    @Test
+    @DisplayName("다른 크리에이터의 활동은 영향 없다")
+    void ignores_other_creators_activity() {
+        // Given
+        CreatorId creatorA = CreatorId.of(30L);
+        CreatorId creatorB = CreatorId.of(40L);
+        CourseId courseA = CourseId.of(300L);
+        CourseId courseB = CourseId.of(400L);
+        YearMonth yearMonth = YearMonth.of(2026, 6);
+
+        courseRepository.saveCourse(Course.of(courseA, creatorA, "강의C"));
+        courseRepository.saveCourse(Course.of(courseB, creatorB, "강의D"));
+
+        salesRepository.saveSalesRecord(SalesRecord.of(courseA, StudentId.of(4L), Money.of(new BigDecimal("15000")), OccurredAt.of(LocalDateTime.of(2026, 6, 5, 10, 0))));
+        salesRepository.saveSalesRecord(SalesRecord.of(courseB, StudentId.of(5L), Money.of(new BigDecimal("99000")), OccurredAt.of(LocalDateTime.of(2026, 6, 10, 10, 0))));
+
+        // When
+        MonthlySettlementView responseA = service.getMonthlySettlement(new MonthlySettlementQuery(30L, yearMonth));
+
+        // Then
+        assertThat(responseA.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("15000"));
+        assertThat(responseA.salesCount()).isEqualTo(1L);
+    }
+}

@@ -5,6 +5,7 @@ import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.service.sales.CancellationRegistrationPolicy;
 import com.creatorsettlement.domain.service.sales.RefundPolicy;
 import com.creatorsettlement.domain.service.sales.SaleRegistrationPolicy;
+import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,5 +25,10 @@ public class DomainBeanConfiguration {
     @Bean
     public CancellationRegistrationPolicy cancellationRegistrationPolicy(SalesRepository salesRepository) {
         return new CancellationRegistrationPolicy(salesRepository);
+    }
+
+    @Bean
+    public MonthlySettlementCalculator monthlySettlementCalculator() {
+        return new MonthlySettlementCalculator();
     }
 }

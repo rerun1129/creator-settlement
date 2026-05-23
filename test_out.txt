@@ -1,0 +1,28 @@
+> Task :compileJava
+> Task :processResources UP-TO-DATE
+> Task :classes
+> Task :compileTestJava
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses
+2026-05-23T16:59:45.540+09:00  INFO 220424 --- [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+Hibernate: drop table if exists cancellation_record cascade 
+Hibernate: drop table if exists course cascade 
+Hibernate: drop table if exists creator cascade 
+Hibernate: drop table if exists sales_record cascade 
+2026-05-23T16:59:45.544+09:00  INFO 220424 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-05-23T16:59:45.546+09:00  INFO 220424 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-05-23T16:59:45.546+09:00  INFO 220424 --- [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+Hibernate: drop table if exists cancellation_record cascade 
+Hibernate: drop table if exists course cascade 
+Hibernate: drop table if exists creator cascade 
+Hibernate: drop table if exists sales_record cascade 
+2026-05-23T16:59:45.546+09:00  INFO 220424 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Shutdown initiated...
+2026-05-23T16:59:45.546+09:00  INFO 220424 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Shutdown completed.
+2026-05-23T16:59:45.547+09:00  INFO 220424 --- [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-23T16:59:45.548+09:00  INFO 220424 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Shutdown initiated...
+2026-05-23T16:59:45.549+09:00  INFO 220424 --- [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Shutdown completed.
+> Task :test
+
+BUILD SUCCESSFUL in 7s
+5 actionable tasks: 3 executed, 2 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.5.1/userguide/configuration_cache_enabling.html
