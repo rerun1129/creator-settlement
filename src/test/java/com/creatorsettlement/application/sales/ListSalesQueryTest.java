@@ -1,5 +1,6 @@
 package com.creatorsettlement.application.sales;
 
+import com.creatorsettlement.application.sales.dto.ListSalesQuery;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

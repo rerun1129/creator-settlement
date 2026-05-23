@@ -5,7 +5,7 @@ import com.creatorsettlement.domain.model.sales.Cancellations;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.course.CourseRepository;
-import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package com.creatorsettlement.infrastructure.persistence.sales;
 
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
-import com.creatorsettlement.domain.repository.sales.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
 import com.creatorsettlement.infrastructure.persistence.creator.CreatorJpaEntity;

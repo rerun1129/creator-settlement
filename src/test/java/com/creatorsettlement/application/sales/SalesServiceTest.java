@@ -1,5 +1,7 @@
 package com.creatorsettlement.application.sales;
 
+import com.creatorsettlement.application.sales.dto.RegisterCancellationCommand;
+import com.creatorsettlement.application.sales.dto.RegisterSaleCommand;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.sales.Cancellations;

@@ -1,4 +1,4 @@
-package com.creatorsettlement.application.sales;
+package com.creatorsettlement.application.sales.dto;
 
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
@@ -6,7 +6,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
-import com.creatorsettlement.domain.repository.sales.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 
 import java.util.List;
 

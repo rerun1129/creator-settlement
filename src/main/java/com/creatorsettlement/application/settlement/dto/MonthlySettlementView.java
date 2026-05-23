@@ -1,4 +1,4 @@
-package com.creatorsettlement.application.settlement;
+package com.creatorsettlement.application.settlement.dto;
 
 import com.creatorsettlement.domain.model.settlement.Settlement;
 import com.creatorsettlement.domain.model.settlement.SettlementStatus;

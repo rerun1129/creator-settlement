@@ -1,10 +1,12 @@
 package com.creatorsettlement.application.settlement;
 
+import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
+import com.creatorsettlement.application.settlement.dto.MonthlySettlementView;
 import com.creatorsettlement.domain.model.settlement.Settlement;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
-import com.creatorsettlement.domain.repository.sales.CancellationSummary;
-import com.creatorsettlement.domain.repository.sales.SalesSummary;
+import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
+import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
 import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;

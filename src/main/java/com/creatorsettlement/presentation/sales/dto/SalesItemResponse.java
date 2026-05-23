@@ -1,6 +1,6 @@
 package com.creatorsettlement.presentation.sales.dto;
 
-import com.creatorsettlement.application.sales.SalesListItem;
+import com.creatorsettlement.application.sales.dto.SalesListItem;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Comparator;

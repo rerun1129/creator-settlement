@@ -7,10 +7,10 @@ import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
-import com.creatorsettlement.domain.repository.sales.CancellationSummary;
-import com.creatorsettlement.domain.repository.sales.SalesSummary;
-import com.creatorsettlement.domain.repository.sales.SalesRecordView;
-import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
+import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
+import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 
 import java.math.BigDecimal;

@@ -3,7 +3,7 @@ package com.creatorsettlement.infrastructure.persistence.sales;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
-import com.creatorsettlement.domain.repository.sales.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 
 import java.util.List;
 import java.util.Map;

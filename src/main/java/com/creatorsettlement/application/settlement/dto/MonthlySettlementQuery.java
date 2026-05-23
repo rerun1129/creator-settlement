@@ -1,4 +1,4 @@
-package com.creatorsettlement.application.settlement;
+package com.creatorsettlement.application.settlement.dto;
 
 import java.time.YearMonth;
 

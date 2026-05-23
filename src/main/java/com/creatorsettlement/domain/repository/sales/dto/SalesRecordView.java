@@ -1,4 +1,4 @@
-package com.creatorsettlement.domain.repository.sales;
+package com.creatorsettlement.domain.repository.sales.dto;
 
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;

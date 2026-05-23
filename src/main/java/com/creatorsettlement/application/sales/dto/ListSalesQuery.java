@@ -1,4 +1,4 @@
-package com.creatorsettlement.application.sales;
+package com.creatorsettlement.application.sales.dto;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CreatorId;

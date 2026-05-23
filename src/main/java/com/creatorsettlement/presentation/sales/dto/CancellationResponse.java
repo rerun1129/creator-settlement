@@ -1,6 +1,6 @@
 package com.creatorsettlement.presentation.sales.dto;
 
-import com.creatorsettlement.application.sales.CancellationView;
+import com.creatorsettlement.application.sales.dto.CancellationView;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

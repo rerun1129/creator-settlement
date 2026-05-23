@@ -1,6 +1,6 @@
 package com.creatorsettlement.presentation.sales.dto;
 
-import com.creatorsettlement.application.sales.ListSalesQuery;
+import com.creatorsettlement.application.sales.dto.ListSalesQuery;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 

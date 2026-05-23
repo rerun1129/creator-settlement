@@ -1,6 +1,6 @@
 package com.creatorsettlement.presentation.sales.dto;
 
-import com.creatorsettlement.application.sales.RegisterCancellationCommand;
+import com.creatorsettlement.application.sales.dto.RegisterCancellationCommand;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
