@@ -1,0 +1,154 @@
+@host = http://localhost:9090
+
+# ============================================================
+# 환불 정책 검증 시나리오 (RefundPolicy)
+#
+# 검증 대상:
+#   - 정상 부분 환불 / 전액 환불
+#   - 단일 환불이 결제 금액 초과 차단
+#   - 누적 환불이 잔여 가능 금액 초과 차단
+#   - 존재하지 않는 매출에 환불 시도 차단
+#
+# 사용법:
+#   - 각 시나리오는 (등록 → SQL로 salesRecordId 확인 → 환불) 패턴
+#   - salesRecordId가 0으로 박힌 자리는 SQL 결과로 교체
+#   - 시나리오 간 격리: studentId 9101~9199 범위 권장
+#
+# 전제:
+#   - 서버 9090 부팅 상태
+#   - courseId 1이 DB에 존재
+#
+# DB cleanup (시나리오 재실행 시):
+#   DELETE FROM cancellation_record WHERE sales_record_id IN (
+#       SELECT sales_record_id FROM sales_record
+#       WHERE student_id BETWEEN 9100 AND 9199);
+#   DELETE FROM sales_record WHERE student_id BETWEEN 9100 AND 9199;
+# ============================================================
+
+
+# ============================================================
+# [시나리오 1] 정상 부분 환불 → 201
+# ============================================================
+
+### 1-A 등록 (사전 조건, 기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9101, "paymentAmount": 100000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] SELECT sales_record_id FROM sales_record WHERE student_id = 9101 ORDER BY sales_record_id DESC LIMIT 1;
+
+### 1-C 부분 환불 30,000 (기대: 201, 잔여 70,000)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 30000, "cancelledAt": "2026-05-23T11:00:00" }
+
+
+### [시나리오 2] 정상 전액 환불 → 201
+
+### 2-A 등록 (사전 조건, 기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9102, "paymentAmount": 50000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] SELECT sales_record_id FROM sales_record WHERE student_id = 9102 ORDER BY sales_record_id DESC LIMIT 1;
+
+### 2-C 전액 환불 (기대: 201, 잔여 0)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 50000, "cancelledAt": "2026-05-23T11:00:00" }
+
+
+### [시나리오 3] 단일 환불이 결제 금액 초과 → 400 REFUND_EXCEEDS_REMAINING
+
+### 3-A 등록 50,000 (사전 조건, 기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9103, "paymentAmount": 50000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] SELECT sales_record_id FROM sales_record WHERE student_id = 9103 ORDER BY sales_record_id DESC LIMIT 1;
+
+### 3-C 50,001 환불 시도 (기대: 400 REFUND_EXCEEDS_REMAINING)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 50001, "cancelledAt": "2026-05-23T11:00:00" }
+
+
+### [시나리오 4] 누적 환불이 잔여 초과 → 400
+### 등록 100,000 → 1차 60,000 환불(잔여 40,000) → 2차 50,000 환불 시도 → 400
+
+### 4-A 등록 100,000 (사전 조건, 기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9104, "paymentAmount": 100000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] SELECT sales_record_id FROM sales_record WHERE student_id = 9104 ORDER BY sales_record_id DESC LIMIT 1;
+
+### 4-C 1차 환불 60,000 (기대: 201, 잔여 40,000)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 60000, "cancelledAt": "2026-05-23T11:00:00" }
+
+### 4-D 2차 환불 50,000 시도 (기대: 400 REFUND_EXCEEDS_REMAINING, 잔여 40,000 < 50,000)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 50000, "cancelledAt": "2026-05-23T12:00:00" }
+
+
+### [시나리오 5] 존재하지 않는 salesRecordId → 400 SALES_RECORD_NOT_FOUND
+
+### 5-A 존재하지 않는 매출에 환불 시도 (기대: 400 SALES_RECORD_NOT_FOUND)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 999999999, "refundAmount": 10000, "cancelledAt": "2026-05-23T10:00:00" }
+
+
+### [시나리오 6] 0원 환불 → 201 (validation 통과, 비즈니스 무의미한 행위)
+###   PositiveOrZero 통과, 잔여 미차감
+
+### 6-A 등록 (사전 조건, 기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9106, "paymentAmount": 50000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] SELECT sales_record_id FROM sales_record WHERE student_id = 9106 ORDER BY sales_record_id DESC LIMIT 1;
+
+### 6-C 0원 환불 (기대: 201, 잔여 50,000 유지)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 0, "cancelledAt": "2026-05-23T11:00:00" }
+
+
+### [시나리오 7] 전액 환불 후 추가 환불 시도 → 400
+### 잔여 0인 상태에서 1원 환불 시도해도 REFUND_EXCEEDS_REMAINING
+
+### 7-A 등록 50,000 (사전 조건, 기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9107, "paymentAmount": 50000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] SELECT sales_record_id FROM sales_record WHERE student_id = 9107 ORDER BY sales_record_id DESC LIMIT 1;
+
+### 7-C 전액 환불 (기대: 201, 잔여 0)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 50000, "cancelledAt": "2026-05-23T11:00:00" }
+
+### 7-D 추가 1원 환불 시도 (기대: 400 REFUND_EXCEEDS_REMAINING)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 1, "cancelledAt": "2026-05-23T12:00:00" }

@@ -1,0 +1,169 @@
+@host = http://localhost:9090
+
+# ============================================================
+# 판매 등록 정책 검증 시나리오 (SaleRegistrationPolicy)
+#
+# 검증 대상:
+#   - 동일 (course, student) 활성 매출 중복 차단
+#   - 전액 환불 시 재구매 허용
+#   - 부분 환불 잔여 활성 시 차단
+#   - course 존재 검증
+#
+# 사용법:
+#   - 필요 시 본문 값(courseId, studentId, salesRecordId, paidAt 등) 직접 수정
+#   - salesRecordId가 0으로 박힌 자리는 직전 등록 후 SQL로 확인하여 직접 입력
+#   - 시나리오 간 격리: studentId 9001~9099 범위 권장
+#
+# 전제:
+#   - 서버 9090 부팅 상태
+#   - courseId 1, 2가 DB에 존재 (없으면 시드 후 진행)
+#
+# DB cleanup (시나리오 재실행 시):
+#   DELETE FROM cancellation_record WHERE sales_record_id IN (
+#       SELECT sales_record_id FROM sales_record
+#       WHERE student_id BETWEEN 9000 AND 9099);
+#   DELETE FROM sales_record WHERE student_id BETWEEN 9000 AND 9099;
+# ============================================================
+
+
+# ============================================================
+# [시나리오 1] 활성 매출 중복 차단 → 409 DUPLICATE_ACTIVE_PURCHASE
+# ============================================================
+
+### 1-A 첫 등록 (기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9001, "paymentAmount": 49000, "paidAt": "2026-05-23T10:00:00" }
+
+### 1-B 동일 (course, student) 재등록 (기대: 409 DUPLICATE_ACTIVE_PURCHASE)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9001, "paymentAmount": 49000, "paidAt": "2026-05-23T11:00:00" }
+
+
+### [시나리오 2] 전액 환불 후 재구매 → 201 (재구매 허용)
+### 절차: 2-A 등록 → SQL로 salesRecordId 확인 → 2-C 전액 환불 → 2-D 재등록
+
+### 2-A 등록 (기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9002, "paymentAmount": 50000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] 직전 등록의 salesRecordId 확인 → 아래 2-C의 salesRecordId 자리에 입력
+### SELECT sales_record_id FROM sales_record
+### WHERE course_id = 1 AND student_id = 9002
+### ORDER BY sales_record_id DESC LIMIT 1;
+
+### 2-C 전액 환불 (기대: 201, salesRecordId는 위 SQL 결과로 교체)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 50000, "cancelledAt": "2026-05-23T11:00:00" }
+
+### 2-D 동일 (course, student) 재등록 (기대: 201, 재구매 성공)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9002, "paymentAmount": 50000, "paidAt": "2026-05-23T12:00:00" }
+
+
+### [시나리오 3] 부분 환불 후 재등록 → 409 (활성 잔여 있음)
+
+### 3-A 등록 (기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9003, "paymentAmount": 80000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] salesRecordId 확인 → 아래 3-C에 입력
+### SELECT sales_record_id FROM sales_record
+### WHERE course_id = 1 AND student_id = 9003
+### ORDER BY sales_record_id DESC LIMIT 1;
+
+### 3-C 부분 환불 (기대: 201, 잔여 50,000)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 30000, "cancelledAt": "2026-05-23T11:00:00" }
+
+### 3-D 동일 (course, student) 재등록 (기대: 409, 잔여 활성)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9003, "paymentAmount": 80000, "paidAt": "2026-05-23T12:00:00" }
+
+
+### [시나리오 4] 동일 강의 / 다른 학생 → 201 (별개 조합)
+
+### 4-A student A 등록 (기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9004, "paymentAmount": 49000, "paidAt": "2026-05-23T10:00:00" }
+
+### 4-B 동일 강의에 다른 student 등록 (기대: 201, 차단 안 됨)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9005, "paymentAmount": 49000, "paidAt": "2026-05-23T10:30:00" }
+
+
+### [시나리오 5] 동일 학생 / 다른 강의 → 201 (별개 조합)
+###   ※ courseId 2가 DB에 없으면 시나리오 6 형태로 떨어짐 (시드 필요)
+
+### 5-A 강의 1 등록 (기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9006, "paymentAmount": 49000, "paidAt": "2026-05-23T10:00:00" }
+
+### 5-B 같은 학생, 다른 강의(2) 등록 (기대: 201, 차단 안 됨)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 2, "studentId": 9006, "paymentAmount": 79000, "paidAt": "2026-05-23T10:30:00" }
+
+
+### [시나리오 6] 존재하지 않는 강의 → 400 COURSE_NOT_FOUND_FOR_REGISTRATION
+
+### 6-A 존재하지 않는 courseId로 등록 시도 (기대: 400 COURSE_NOT_FOUND_FOR_REGISTRATION)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 999999999, "studentId": 9007, "paymentAmount": 49000, "paidAt": "2026-05-23T10:00:00" }
+
+
+###[시나리오 7] 재구매 사이클 — 재구매한 row가 다시 활성이므로 또 차단
+###절차: 7-A 등록 → SQL → 7-C 전액 환불 → 7-D 재구매 → 7-E 또 등록 시도 → 409
+
+### 7-A 첫 등록 (기대: 201)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9008, "paymentAmount": 49000, "paidAt": "2026-05-23T10:00:00" }
+
+### [SQL] 첫 매출 salesRecordId 확인 → 아래 7-C에 입력
+### SELECT sales_record_id FROM sales_record
+### WHERE course_id = 1 AND student_id = 9008
+### ORDER BY sales_record_id DESC LIMIT 1;
+
+### 7-C 첫 매출 전액 환불 (기대: 201)
+POST {{host}}/api/sales/cancellations
+Content-Type: application/json
+
+{ "salesRecordId": 0, "refundAmount": 49000, "cancelledAt": "2026-05-23T11:00:00" }
+
+### 7-D 재구매 (기대: 201, 두 번째 활성 매출 생성)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9008, "paymentAmount": 49000, "paidAt": "2026-05-23T12:00:00" }
+
+### 7-E 재구매 직후 또 등록 시도 (기대: 409, 두 번째 매출이 활성이므로)
+POST {{host}}/api/sales
+Content-Type: application/json
+
+{ "courseId": 1, "studentId": 9008, "paymentAmount": 49000, "paidAt": "2026-05-23T13:00:00" }
