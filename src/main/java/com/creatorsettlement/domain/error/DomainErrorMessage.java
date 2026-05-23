@@ -16,17 +16,6 @@ public enum DomainErrorMessage {
     FEE_RATE_NULL("수수료율 정보가 누락되었습니다", 400),
     FEE_RATE_NEGATIVE("수수료율은 0% 이상이어야 합니다", 400),
     FEE_RATE_GREATER_THAN_ONE("수수료율은 100%를 초과할 수 없습니다", 400),
-    SETTLEMENT_CREATOR_ID_NULL("정산 크리에이터 정보가 누락되었습니다", 400),
-    SETTLEMENT_YEAR_MONTH_NULL("정산 연월이 누락되었습니다", 400),
-    SETTLEMENT_STATUS_NULL("정산 상태 정보가 누락되었습니다", 400),
-    SETTLEMENT_TOTAL_SALES_NULL("총 판매 금액이 누락되었습니다", 400),
-    SETTLEMENT_TOTAL_REFUND_NULL("환불 금액이 누락되었습니다", 400),
-    SETTLEMENT_NET_SALES_NULL("순 판매 금액이 누락되었습니다", 400),
-    SETTLEMENT_FEE_RATE_NULL("적용 수수료율 정보가 누락되었습니다", 400),
-    SETTLEMENT_PLATFORM_FEE_NULL("플랫폼 수수료가 누락되었습니다", 400),
-    SETTLEMENT_EXPECTED_PAYOUT_NULL("정산 예정 금액이 누락되었습니다", 400),
-    SETTLEMENT_SALES_COUNT_NEGATIVE("판매 건수는 0건 이상이어야 합니다", 400),
-    SETTLEMENT_CANCELLATION_COUNT_NEGATIVE("취소 건수는 0건 이상이어야 합니다", 400),
     SETTLEMENT_AMOUNT_NULL("정산 금액이 누락되었습니다", 400);
 
     private final String message;

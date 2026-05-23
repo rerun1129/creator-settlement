@@ -1,6 +1,5 @@
 package com.creatorsettlement.domain.model.settlement;
 
-import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
@@ -38,18 +37,6 @@ public class Settlement {
             long cancellationCount,
             OccurredAt confirmedAt
     ) {
-        if (creatorId == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_CREATOR_ID_NULL.message());
-        if (yearMonth == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_YEAR_MONTH_NULL.message());
-        if (status == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_STATUS_NULL.message());
-        if (totalSales == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_TOTAL_SALES_NULL.message());
-        if (totalRefund == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_TOTAL_REFUND_NULL.message());
-        if (netSales == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NET_SALES_NULL.message());
-        if (feeRate == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_FEE_RATE_NULL.message());
-        if (platformFee == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_PLATFORM_FEE_NULL.message());
-        if (expectedPayout == null) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_EXPECTED_PAYOUT_NULL.message());
-        if (salesCount < 0) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_SALES_COUNT_NEGATIVE.message());
-        if (cancellationCount < 0) throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_CANCELLATION_COUNT_NEGATIVE.message());
-
         this.creatorId = creatorId;
         this.yearMonth = yearMonth;
         this.status = status;

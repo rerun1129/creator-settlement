@@ -3,17 +3,14 @@ package com.creatorsettlement.domain.model.settlement;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
-import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SettlementAmount;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Settlement 단위 테스트")
 class SettlementTest {
@@ -65,91 +62,5 @@ class SettlementTest {
         assertThat(settlement.expectedPayout()).isEqualTo(EXPECTED_PAYOUT);
         assertThat(settlement.salesCount()).isEqualTo(5L);
         assertThat(settlement.cancellationCount()).isEqualTo(2L);
-    }
-
-    @Test
-    @DisplayName("not-null 필드가 null이면 거부된다")
-    void rejects_null_required_fields() {
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                null, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, null,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                null, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, null, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, null,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                null, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, null, EXPECTED_PAYOUT,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, null,
-                5L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("salesCount가 음수면 거부된다")
-    void rejects_negative_salesCount() {
-        // when
-        // then
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                -1L, 2L
-        )).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @DisplayName("cancellationCount가 음수면 거부된다")
-    void rejects_negative_cancellationCount() {
-        // when
-        // then
-        assertThatThrownBy(() -> Settlement.pendingSnapshot(
-                CREATOR_ID, YEAR_MONTH,
-                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
-                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
-                5L, -1L
-        )).isInstanceOf(IllegalArgumentException.class);
     }
 }
