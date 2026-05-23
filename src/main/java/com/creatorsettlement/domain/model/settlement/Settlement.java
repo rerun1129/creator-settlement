@@ -1,6 +1,5 @@
 package com.creatorsettlement.domain.model.settlement;
 
-import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
@@ -114,18 +113,12 @@ public class Settlement {
     public OccurredAt paidAt() { return paidAt; }
 
     public void confirm(OccurredAt occurredAt) {
-        switch (status) {
-            case PENDING -> { status = SettlementStatus.CONFIRMED; confirmedAt = occurredAt; }
-            case CONFIRMED -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_ALREADY_CONFIRMED.message());
-            case PAID -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_ALREADY_PAID.message());
-        }
+        this.status = status.toConfirmed();
+        this.confirmedAt = occurredAt;
     }
 
     public void pay(OccurredAt occurredAt) {
-        switch (status) {
-            case CONFIRMED -> { status = SettlementStatus.PAID; paidAt = occurredAt; }
-            case PENDING -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_NOT_CONFIRMED_FOR_PAYMENT.message());
-            case PAID -> throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_ALREADY_PAID.message());
-        }
+        this.status = status.toPaid();
+        this.paidAt = occurredAt;
     }
 }
