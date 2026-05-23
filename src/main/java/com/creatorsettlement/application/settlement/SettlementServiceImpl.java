@@ -93,7 +93,7 @@ public class SettlementServiceImpl implements SettlementService {
         LocalDateTime fromDT = query.from().atStartOfDay();
         LocalDateTime toExclusiveDT = query.to().plusDays(1).atStartOfDay();
 
-        List<SalesRecordView> salesViews = salesRepository.findSalesView(Optional.empty(), fromDT, toExclusiveDT);
+        List<SalesRecordView> salesViews = salesRepository.findAllSalesView(fromDT, toExclusiveDT);
         List<CancellationView> cancellationViews = salesRepository.findCancellationsByDateRange(fromDT, toExclusiveDT);
 
         Map<CreatorId, BigDecimal> totalSalesByCreator = new HashMap<>();

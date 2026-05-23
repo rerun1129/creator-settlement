@@ -298,7 +298,7 @@ class SalesControllerE2ETest {
     }
 
     private long latestSaleId(long creatorId, LocalDateTime from, LocalDateTime toExclusive) {
-        List<SalesRecordView> views = salesRepo.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
+        List<SalesRecordView> views = salesRepo.findSalesView(CreatorId.of(creatorId), from, toExclusive);
         return views.get(0).id().value();
     }
 }

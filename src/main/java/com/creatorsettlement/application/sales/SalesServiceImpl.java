@@ -10,6 +10,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
+import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.service.sales.CancellationRegistrationPolicy;
 import com.creatorsettlement.domain.service.sales.RefundPolicy;
 import com.creatorsettlement.domain.service.sales.SaleRegistrationPolicy;
@@ -55,8 +56,10 @@ public class SalesServiceImpl implements SalesService {
     @Transactional(readOnly = true)
     @Override
     public List<SalesListItem> listSales(ListSalesQuery query) {
-        return salesRepository.findSalesView(query.toCreatorId(), query.from(), query.toExclusive())
-                .stream()
+        List<SalesRecordView> views = query.toCreatorId()
+                .map(creatorId -> salesRepository.findSalesView(creatorId, query.from(), query.toExclusive()))
+                .orElseGet(() -> salesRepository.findAllSalesView(query.from(), query.toExclusive()));
+        return views.stream()
                 .map(SalesListItem::from)
                 .toList();
     }

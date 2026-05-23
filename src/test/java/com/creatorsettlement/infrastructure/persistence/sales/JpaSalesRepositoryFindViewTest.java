@@ -53,7 +53,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorId), from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
@@ -90,7 +90,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorIdA)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorIdA), from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
@@ -114,7 +114,7 @@ class JpaSalesRepositoryFindViewTest {
         em.clear();
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorId), from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
@@ -142,7 +142,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.empty(), from, toExclusive);
+        List<SalesRecordView> result = sut.findAllSalesView(from, toExclusive);
 
         // then
         assertThat(result).hasSize(2);
@@ -163,7 +163,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(Optional.of(CreatorId.of(creatorId)), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorId), from, toExclusive);
 
         // then
         assertThat(result).hasSize(1);

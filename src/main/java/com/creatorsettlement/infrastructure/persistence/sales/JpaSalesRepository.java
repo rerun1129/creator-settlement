@@ -68,14 +68,16 @@ public class JpaSalesRepository implements SalesRepository {
     }
 
     @Override
-    public List<SalesRecordView> findSalesView(Optional<CreatorId> creatorId, LocalDateTime from, LocalDateTime toExclusive) {
-        List<SalesRecordJpaEntity> sales;
-        if (creatorId.isEmpty()) {
-            sales = salesDataRepository.findByPeriod(from, toExclusive);
-        } else {
-            sales = salesDataRepository.findByCreatorIdAndPeriod(creatorId.get().value(), from, toExclusive);
-        }
+    public List<SalesRecordView> findAllSalesView(LocalDateTime from, LocalDateTime toExclusive) {
+        return assembleViews(salesDataRepository.findByPeriod(from, toExclusive));
+    }
 
+    @Override
+    public List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive) {
+        return assembleViews(salesDataRepository.findByCreatorIdAndPeriod(creatorId.value(), from, toExclusive));
+    }
+
+    private List<SalesRecordView> assembleViews(List<SalesRecordJpaEntity> sales) {
         if (sales.isEmpty()) {
             return List.of();
         }
