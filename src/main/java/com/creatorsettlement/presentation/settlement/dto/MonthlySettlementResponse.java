@@ -19,7 +19,8 @@ public record MonthlySettlementResponse(
         BigDecimal expectedPayout,
         long salesCount,
         long cancellationCount,
-        LocalDateTime confirmedAt
+        LocalDateTime confirmedAt,
+        LocalDateTime paidAt
 ) {
     public static MonthlySettlementResponse from(MonthlySettlementView view) {
         return new MonthlySettlementResponse(
@@ -34,7 +35,8 @@ public record MonthlySettlementResponse(
                 view.expectedPayout(),
                 view.salesCount(),
                 view.cancellationCount(),
-                view.confirmedAt()
+                view.confirmedAt(),
+                view.paidAt()
         );
     }
 }

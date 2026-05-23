@@ -3,6 +3,7 @@ package com.creatorsettlement.presentation.error;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -52,6 +53,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(400, "VALIDATION", e.getName() + ": 형식이 올바르지 않습니다"));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(HttpMessageNotReadableException e) {
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "VALIDATION", "요청 본문 형식이 올바르지 않습니다"));
     }
 
     @ExceptionHandler(Exception.class)
