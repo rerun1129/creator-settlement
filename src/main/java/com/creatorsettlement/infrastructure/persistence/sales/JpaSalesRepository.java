@@ -2,9 +2,11 @@ package com.creatorsettlement.infrastructure.persistence.sales;
 
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
+import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
+import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
@@ -72,5 +74,10 @@ public class JpaSalesRepository implements SalesRepository {
                 .collect(Collectors.groupingBy(CancellationRecordJpaEntity::getSalesRecordId));
 
         return SalesRecordViewAssembler.assemble(sales, cancelByRecordId);
+    }
+
+    @Override
+    public boolean existsActiveSaleByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
+        return salesDataRepository.existsActiveSaleByCourseIdAndStudentId(courseId.value(), studentId.value());
     }
 }

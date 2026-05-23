@@ -11,7 +11,8 @@ public enum DomainErrorMessage {
     REFUND_EXCEEDS_REMAINING("환불 금액은 잔여 환불 가능 금액을 초과할 수 없습니다", 400),
     SALES_RECORD_NOT_FOUND("원본 판매 내역을 찾을 수 없습니다", 400),
     LIST_SALES_PERIOD_INVALID("조회 시작 일시가 종료 일시보다 늦을 수 없습니다", 400),
-    COURSE_NOT_FOUND_FOR_REGISTRATION("등록 대상 강의를 찾을 수 없습니다", 400);
+    COURSE_NOT_FOUND_FOR_REGISTRATION("등록 대상 강의를 찾을 수 없습니다", 400),
+    DUPLICATE_ACTIVE_PURCHASE("동일 학생의 동일 강의에 활성 결제가 이미 존재합니다", 409);
 
     private final String message;
     private final int httpStatus;

@@ -227,4 +227,64 @@ class SalesServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
     }
+
+    @Test
+    @DisplayName("동일 학생의 동일 강의에 활성 결제가 있으면 중복 등록 시 예외가 발생한다")
+    void register_throwsException_whenActiveSaleExists() {
+        // Given
+        courseRepository.saveCourse(Course.of(CourseId.of(1L), CreatorId.of(1L), "샘플 강의"));
+        RegisterSaleCommand firstCommand = new RegisterSaleCommand(
+                1L, 2L, new BigDecimal("50000"), LocalDateTime.of(2026, 5, 1, 10, 0, 0));
+        service.register(firstCommand);
+
+        RegisterSaleCommand duplicateCommand = new RegisterSaleCommand(
+                1L, 2L, new BigDecimal("50000"), LocalDateTime.of(2026, 5, 2, 10, 0, 0));
+
+        // When & Then
+        assertThatThrownBy(() -> service.register(duplicateCommand))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.DUPLICATE_ACTIVE_PURCHASE.message());
+    }
+
+    @Test
+    @DisplayName("동일 학생의 동일 강의가 전액 환불된 상태면 재등록이 성공한다")
+    void register_succeeds_whenFullyRefundedSaleExists() {
+        // Given
+        courseRepository.saveCourse(Course.of(CourseId.of(1L), CreatorId.of(1L), "샘플 강의"));
+        RegisterSaleCommand firstCommand = new RegisterSaleCommand(
+                1L, 2L, new BigDecimal("50000"), LocalDateTime.of(2026, 5, 1, 10, 0, 0));
+        service.register(firstCommand);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+        RegisterCancellationCommand fullRefund = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("50000"), LocalDateTime.of(2026, 5, 3, 10, 0, 0));
+        service.registerCancellation(fullRefund);
+
+        RegisterSaleCommand reRegisterCommand = new RegisterSaleCommand(
+                1L, 2L, new BigDecimal("50000"), LocalDateTime.of(2026, 5, 5, 10, 0, 0));
+
+        // When & Then
+        assertThatNoException().isThrownBy(() -> service.register(reRegisterCommand));
+    }
+
+    @Test
+    @DisplayName("동일 학생의 동일 강의가 부분 환불 상태(잔여 활성)면 중복 등록 시 예외가 발생한다")
+    void register_throwsException_whenPartiallyRefundedSaleExists() {
+        // Given
+        courseRepository.saveCourse(Course.of(CourseId.of(1L), CreatorId.of(1L), "샘플 강의"));
+        RegisterSaleCommand firstCommand = new RegisterSaleCommand(
+                1L, 2L, new BigDecimal("50000"), LocalDateTime.of(2026, 5, 1, 10, 0, 0));
+        service.register(firstCommand);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+        RegisterCancellationCommand partialRefund = new RegisterCancellationCommand(
+                salesRecordId.value(), new BigDecimal("30000"), LocalDateTime.of(2026, 5, 3, 10, 0, 0));
+        service.registerCancellation(partialRefund);
+
+        RegisterSaleCommand duplicateCommand = new RegisterSaleCommand(
+                1L, 2L, new BigDecimal("50000"), LocalDateTime.of(2026, 5, 5, 10, 0, 0));
+
+        // When & Then
+        assertThatThrownBy(() -> service.register(duplicateCommand))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.DUPLICATE_ACTIVE_PURCHASE.message());
+    }
 }

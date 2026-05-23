@@ -5,6 +5,7 @@ import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
+import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.course.CourseRepository;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.service.sales.RefundPolicy;
@@ -32,6 +33,10 @@ public class SalesServiceImpl implements SalesService {
         CourseId courseId = CourseId.of(command.courseId());
         if (!courseRepository.existsByCourseId(courseId)) {
             throw new IllegalArgumentException(DomainErrorMessage.COURSE_NOT_FOUND_FOR_REGISTRATION.message());
+        }
+        StudentId studentId = StudentId.of(command.studentId());
+        if (salesRepository.existsActiveSaleByCourseIdAndStudentId(courseId, studentId)) {
+            throw new IllegalArgumentException(DomainErrorMessage.DUPLICATE_ACTIVE_PURCHASE.message());
         }
         salesRepository.saveSalesRecord(command.toSalesRecord());
     }

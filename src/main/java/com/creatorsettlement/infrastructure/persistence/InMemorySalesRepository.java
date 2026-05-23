@@ -6,6 +6,7 @@ import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
+import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
@@ -123,6 +124,13 @@ public class InMemorySalesRepository implements SalesRepository {
                         creatorIdByCourseId.get(s.record().getCourseId())
                 ))
                 .toList();
+    }
+
+    @Override
+    public boolean existsActiveSaleByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
+        return salesById.entrySet().stream()
+                .filter(e -> e.getValue().getCourseId().equals(courseId) && e.getValue().getStudentId().equals(studentId))
+                .anyMatch(e -> e.getValue().getPaymentAmount().value().compareTo(sumRefundsBySalesRecordId(e.getKey()).value()) > 0);
     }
 
     public List<SalesRecord> findAll() {

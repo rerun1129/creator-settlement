@@ -21,4 +21,16 @@ interface SalesRecordJpaDataRepository extends JpaRepository<SalesRecordJpaEntit
             @Param("from") LocalDateTime from,
             @Param("to") LocalDateTime to
     );
+
+    @Query("""
+            SELECT COUNT(s) > 0
+            FROM SalesRecordJpaEntity s
+            WHERE s.course.id = :courseId
+              AND s.studentId = :studentId
+              AND s.paymentAmount > COALESCE(
+                (SELECT SUM(c.refundAmount) FROM CancellationRecordJpaEntity c WHERE c.salesRecordId = s.id),
+                0
+              )
+            """)
+    boolean existsActiveSaleByCourseIdAndStudentId(@Param("courseId") Long courseId, @Param("studentId") Long studentId);
 }
