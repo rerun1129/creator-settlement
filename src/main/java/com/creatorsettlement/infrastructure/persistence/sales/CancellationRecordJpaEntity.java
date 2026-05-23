@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "cancellation_record")
-class CancellationRecordJpaEntity extends BaseTimeEntity {
+public class CancellationRecordJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

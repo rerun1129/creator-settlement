@@ -2,7 +2,6 @@ package com.creatorsettlement.integration;
 
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
-import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.StudentId;

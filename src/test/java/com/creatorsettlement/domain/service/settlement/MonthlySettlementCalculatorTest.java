@@ -1,7 +1,6 @@
 package com.creatorsettlement.domain.service.settlement;
 
 import com.creatorsettlement.domain.model.settlement.Settlement;
-import com.creatorsettlement.domain.model.settlement.SettlementStatus;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;

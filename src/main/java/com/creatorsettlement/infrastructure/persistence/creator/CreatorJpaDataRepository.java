@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-interface CreatorJpaDataRepository extends JpaRepository<CreatorJpaEntity, Long> {
+public interface CreatorJpaDataRepository extends JpaRepository<CreatorJpaEntity, Long> {
 
     @Query("SELECT c.id FROM CreatorJpaEntity c")
     List<Long> findAllIds();

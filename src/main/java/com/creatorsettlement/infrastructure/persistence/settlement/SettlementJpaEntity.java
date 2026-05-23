@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
     name = "settlement",
     uniqueConstraints = @UniqueConstraint(name = "uk_settlement_creator_yearmonth", columnNames = {"creator_id", "year_month"})
 )
-class SettlementJpaEntity extends BaseTimeEntity {
+public class SettlementJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

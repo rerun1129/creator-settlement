@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sales_record")
-class SalesRecordJpaEntity extends BaseTimeEntity {
+public class SalesRecordJpaEntity extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

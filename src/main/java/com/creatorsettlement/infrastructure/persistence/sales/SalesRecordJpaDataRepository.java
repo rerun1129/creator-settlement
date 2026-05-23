@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-interface SalesRecordJpaDataRepository extends JpaRepository<SalesRecordJpaEntity, Long> {
+public interface SalesRecordJpaDataRepository extends JpaRepository<SalesRecordJpaEntity, Long> {
 
     @Query("SELECT s FROM SalesRecordJpaEntity s JOIN FETCH s.course c WHERE c.creatorId = :creatorId AND s.paidAt >= :from AND s.paidAt < :to")
     List<SalesRecordJpaEntity> findByCreatorIdAndPeriod(

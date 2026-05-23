@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-interface CancellationJpaDataRepository extends JpaRepository<CancellationRecordJpaEntity, Long> {
+public interface CancellationJpaDataRepository extends JpaRepository<CancellationRecordJpaEntity, Long> {
 
     List<CancellationRecordJpaEntity> findBySalesRecordId(Long salesRecordId);
 
