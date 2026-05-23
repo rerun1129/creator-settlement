@@ -4,7 +4,6 @@ import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
-import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.SalesRecordView;
@@ -47,8 +46,9 @@ public class JpaSalesRepository implements SalesRepository {
     }
 
     @Override
-    public Money sumRefundsBySalesRecordId(SalesRecordId salesRecordId) {
-        return Money.of(cancellationDataRepository.sumRefundAmountBySalesRecordId(salesRecordId.value()));
+    public List<CancellationRecord> findCancellationsBySalesRecordId(SalesRecordId salesRecordId) {
+        return cancellationDataRepository.findBySalesRecordId(salesRecordId.value())
+                .stream().map(SalesRecordMapper::toDomainCancellation).toList();
     }
 
     @Override

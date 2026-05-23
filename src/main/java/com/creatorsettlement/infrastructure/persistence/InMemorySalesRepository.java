@@ -4,14 +4,12 @@ import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
-import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,12 +46,8 @@ public class InMemorySalesRepository implements SalesRepository {
     }
 
     @Override
-    public Money sumRefundsBySalesRecordId(SalesRecordId salesRecordId) {
-        BigDecimal sum = cancellations.stream()
-                .filter(c -> c.getSalesRecordId().equals(salesRecordId))
-                .map(c -> c.getRefundAmount().value())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return Money.of(sum);
+    public List<CancellationRecord> findCancellationsBySalesRecordId(SalesRecordId salesRecordId) {
+        return cancellations.stream().filter(c -> c.getSalesRecordId().equals(salesRecordId)).toList();
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.creatorsettlement.application.sales;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.course.Course;
+import com.creatorsettlement.domain.model.sales.Cancellations;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
@@ -101,7 +102,7 @@ class SalesServiceTest {
         service.registerCancellation(cancelCommand);
 
         // Then
-        Money cumulative = repository.sumRefundsBySalesRecordId(salesRecordId);
+        Money cumulative = Cancellations.of(repository.findCancellationsBySalesRecordId(salesRecordId)).total();
         assertThat(cumulative.value()).isEqualByComparingTo(new BigDecimal("3000"));
     }
 
@@ -180,7 +181,7 @@ class SalesServiceTest {
         service.registerCancellation(secondCancel);
 
         // Then
-        Money cumulative = repository.sumRefundsBySalesRecordId(salesRecordId);
+        Money cumulative = Cancellations.of(repository.findCancellationsBySalesRecordId(salesRecordId)).total();
         assertThat(cumulative.value()).isEqualByComparingTo(new BigDecimal("8000"));
     }
 
@@ -204,7 +205,7 @@ class SalesServiceTest {
         service.registerCancellation(secondCancel);
 
         // Then
-        Money cumulative = repository.sumRefundsBySalesRecordId(salesRecordId);
+        Money cumulative = Cancellations.of(repository.findCancellationsBySalesRecordId(salesRecordId)).total();
         assertThat(cumulative.value()).isEqualByComparingTo(new BigDecimal("10000"));
     }
 

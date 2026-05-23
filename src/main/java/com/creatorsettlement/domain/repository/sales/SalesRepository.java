@@ -4,7 +4,6 @@ import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
-import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 
@@ -18,7 +17,7 @@ public interface SalesRepository {
 
     Optional<SalesRecord> findById(SalesRecordId salesRecordId);
 
-    Money sumRefundsBySalesRecordId(SalesRecordId salesRecordId);
+    List<CancellationRecord> findCancellationsBySalesRecordId(SalesRecordId salesRecordId);
 
     void saveCancellationRecord(CancellationRecord cancellationRecord);
 

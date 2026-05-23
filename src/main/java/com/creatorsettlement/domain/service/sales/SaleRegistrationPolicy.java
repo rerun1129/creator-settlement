@@ -1,8 +1,8 @@
 package com.creatorsettlement.domain.service.sales;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
+import com.creatorsettlement.domain.model.sales.Cancellations;
 import com.creatorsettlement.domain.model.vo.CourseId;
-import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.course.CourseRepository;
 import com.creatorsettlement.domain.repository.sales.SalesRecordWithId;
@@ -35,7 +35,7 @@ public class SaleRegistrationPolicy {
     }
 
     private boolean isFullyRefunded(SalesRecordWithId sale) {
-        Money refundedSum = salesRepository.sumRefundsBySalesRecordId(sale.id());
-        return sale.record().getPaymentAmount().value().compareTo(refundedSum.value()) <= 0;
+        return Cancellations.of(salesRepository.findCancellationsBySalesRecordId(sale.id()))
+                .coversFully(sale.record().getPaymentAmount());
     }
 }
