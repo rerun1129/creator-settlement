@@ -313,6 +313,69 @@ class SettlementControllerE2ETest {
                 .andExpect(jsonPath("$.paidAt").value("2026-06-02T10:00:00"));
     }
 
+    // ─── GET /api/settlements/aggregate ────────────────────────────────────────
+
+    @Test
+    @DisplayName("기간 집계 조회 시 creatorId asc 정렬 + totalAmount 합산 정확")
+    void aggregate_returns_200_with_sorted_payables_and_total() throws Exception {
+        // given
+        long creatorIdA = saveCreator("크리에이터 A");
+        long creatorIdB = saveCreator("크리에이터 B");
+        long creatorIdC = saveCreator("크리에이터 C");
+        long courseA = saveCourse(creatorIdA, "강의 A");
+        long courseB = saveCourse(creatorIdB, "강의 B");
+        saveSale(courseA, 10L, "50000", LocalDateTime.of(2026, 5, 10, 12, 0));
+        saveSale(courseB, 20L, "30000", LocalDateTime.of(2026, 5, 11, 12, 0));
+
+        // when & then
+        mockMvc.perform(get("/api/settlements/aggregate")
+                        .param("from", "2026-05-01")
+                        .param("to", "2026-05-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.responses.length()").value(3))
+                .andExpect(jsonPath("$.responses[0].creatorId").value(creatorIdA))
+                .andExpect(jsonPath("$.responses[0].expectedSettlementAmount").value(40000))
+                .andExpect(jsonPath("$.responses[1].creatorId").value(creatorIdB))
+                .andExpect(jsonPath("$.responses[1].expectedSettlementAmount").value(24000))
+                .andExpect(jsonPath("$.responses[2].creatorId").value(creatorIdC))
+                .andExpect(jsonPath("$.responses[2].expectedSettlementAmount").value(0))
+                .andExpect(jsonPath("$.totalAmount").value(64000));
+    }
+
+    @Test
+    @DisplayName("크리에이터 0명 조회 시 빈 배열과 0원 totalAmount 반환")
+    void aggregate_returns_200_with_empty_responses_when_no_creators() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/settlements/aggregate")
+                        .param("from", "2026-05-01")
+                        .param("to", "2026-05-31"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.responses.length()").value(0))
+                .andExpect(jsonPath("$.totalAmount").value(0));
+    }
+
+    @Test
+    @DisplayName("from이 to보다 늦은 경우 400 VALIDATION")
+    void aggregate_returns_400_VALIDATION_when_from_after_to() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/settlements/aggregate")
+                        .param("from", "2026-05-31")
+                        .param("to", "2026-05-01"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION"));
+    }
+
+    @Test
+    @DisplayName("from 날짜 포맷 오류 시 400 응답")
+    void aggregate_returns_400_when_from_date_format_invalid() throws Exception {
+        // when & then
+        mockMvc.perform(get("/api/settlements/aggregate")
+                        .param("from", "invalid-date")
+                        .param("to", "2026-05-31"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION"));
+    }
+
     // ─── Fixture helpers ────────────────────────────────────────────────────────
 
     private long saveCreator(String name) {

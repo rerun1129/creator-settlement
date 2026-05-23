@@ -3,8 +3,10 @@ package com.creatorsettlement.presentation.settlement;
 import com.creatorsettlement.application.settlement.SettlementService;
 import com.creatorsettlement.presentation.settlement.dto.ConfirmSettlementRequest;
 import com.creatorsettlement.presentation.settlement.dto.GetMonthlySettlementRequest;
+import com.creatorsettlement.presentation.settlement.dto.GetSettlementRangeRequest;
 import com.creatorsettlement.presentation.settlement.dto.MonthlySettlementResponse;
 import com.creatorsettlement.presentation.settlement.dto.PaySettlementRequest;
+import com.creatorsettlement.presentation.settlement.dto.SettlementRangeResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +32,13 @@ public class SettlementController {
             @Valid @ModelAttribute GetMonthlySettlementRequest request) {
         return ResponseEntity.ok(MonthlySettlementResponse.from(
                 settlementService.getMonthlySettlement(request.toQuery())));
+    }
+
+    @GetMapping("/aggregate")
+    public ResponseEntity<SettlementRangeResponse> getSettlementsInRange(
+            @Valid @ModelAttribute GetSettlementRangeRequest request) {
+        return ResponseEntity.ok(SettlementRangeResponse.from(
+                settlementService.getSettlementsInRange(request.toQuery())));
     }
 
     @PostMapping("/confirm")
