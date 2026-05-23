@@ -6,18 +6,29 @@ import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Repository
 public class JpaSettlementRepository implements SettlementRepository {
 
+    private static final DateTimeFormatter YEAR_MONTH_FORMAT = DateTimeFormatter.ofPattern("yyyyMM");
+
+    private final SettlementJpaDataRepository dataRepository;
+
+    public JpaSettlementRepository(SettlementJpaDataRepository dataRepository) {
+        this.dataRepository = dataRepository;
+    }
+
     @Override
     public Optional<Settlement> findByCreatorIdAndYearMonth(CreatorId creatorId, YearMonth yearMonth) {
-        return Optional.empty();
+        String ymString = yearMonth.format(YEAR_MONTH_FORMAT);
+        return dataRepository.findByCreatorIdAndYearMonth(creatorId.value(), ymString)
+                .map(SettlementMapper::toDomain);
     }
 
     @Override
     public void save(Settlement settlement) {
-        throw new UnsupportedOperationException("Phase 3 JPA 구현 예정");
+        dataRepository.save(SettlementMapper.toEntity(settlement));
     }
 }

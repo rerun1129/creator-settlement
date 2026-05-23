@@ -4,6 +4,7 @@ import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
+import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
@@ -16,6 +17,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
@@ -97,11 +99,23 @@ public class JpaSalesRepository implements SalesRepository {
 
     @Override
     public SalesSummary findSalesSummaryByCreatorAndMonth(CreatorId creatorId, YearMonth yearMonth) {
-        throw new UnsupportedOperationException("Phase 3 JPA 구현 예정");
+        LocalDateTime startInclusive = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endExclusive = yearMonth.plusMonths(1).atDay(1).atStartOfDay();
+        List<SalesRecordJpaEntity> sales = salesDataRepository.findByCreatorIdAndPeriod(creatorId.value(), startInclusive, endExclusive);
+        BigDecimal total = sales.stream()
+                .map(SalesRecordJpaEntity::getPaymentAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new SalesSummary(Money.of(total), sales.size());
     }
 
     @Override
     public CancellationSummary findCancellationSummaryByCreatorAndMonth(CreatorId creatorId, YearMonth yearMonth) {
-        throw new UnsupportedOperationException("Phase 3 JPA 구현 예정");
+        LocalDateTime startInclusive = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endExclusive = yearMonth.plusMonths(1).atDay(1).atStartOfDay();
+        List<CancellationRecordJpaEntity> cancellations = cancellationDataRepository.findByCreatorAndCancelledAtBetween(creatorId.value(), startInclusive, endExclusive);
+        BigDecimal total = cancellations.stream()
+                .map(CancellationRecordJpaEntity::getRefundAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return new CancellationSummary(Money.of(total), cancellations.size());
     }
 }

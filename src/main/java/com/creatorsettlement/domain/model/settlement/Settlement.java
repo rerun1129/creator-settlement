@@ -65,6 +65,21 @@ public class Settlement {
         );
     }
 
+    public static Settlement confirmedSnapshot(
+            CreatorId creatorId, YearMonth yearMonth,
+            Money totalSales, Money totalRefund, SettlementAmount netSales,
+            FeeRate feeRate, Money platformFee, SettlementAmount expectedPayout,
+            long salesCount, long cancellationCount,
+            OccurredAt confirmedAt
+    ) {
+        return new Settlement(
+                creatorId, yearMonth, SettlementStatus.CONFIRMED,
+                totalSales, totalRefund, netSales,
+                feeRate, platformFee, expectedPayout,
+                salesCount, cancellationCount, confirmedAt
+        );
+    }
+
     public CreatorId creatorId() { return creatorId; }
     public YearMonth yearMonth() { return yearMonth; }
     public SettlementStatus status() { return status; }
