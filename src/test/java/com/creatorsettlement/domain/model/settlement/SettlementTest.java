@@ -1,0 +1,155 @@
+package com.creatorsettlement.domain.model.settlement;
+
+import com.creatorsettlement.domain.model.vo.CreatorId;
+import com.creatorsettlement.domain.model.vo.FeeRate;
+import com.creatorsettlement.domain.model.vo.Money;
+import com.creatorsettlement.domain.model.vo.OccurredAt;
+import com.creatorsettlement.domain.model.vo.SettlementAmount;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+@DisplayName("Settlement 단위 테스트")
+class SettlementTest {
+
+    private static final CreatorId CREATOR_ID = CreatorId.of(1L);
+    private static final YearMonth YEAR_MONTH = YearMonth.of(2026, 5);
+    private static final Money TOTAL_SALES = Money.of(new BigDecimal("100000"));
+    private static final Money TOTAL_REFUND = Money.of(new BigDecimal("30000"));
+    private static final SettlementAmount NET_SALES = SettlementAmount.of(new BigDecimal("70000"));
+    private static final FeeRate FEE_RATE = FeeRate.of(new BigDecimal("0.2"));
+    private static final Money PLATFORM_FEE = Money.of(new BigDecimal("14000"));
+    private static final SettlementAmount EXPECTED_PAYOUT = SettlementAmount.of(new BigDecimal("56000"));
+
+    @Test
+    @DisplayName("pendingSnapshot은 PENDING 상태와 null confirmedAt으로 생성한다")
+    void pendingSnapshot_creates_pending_status_with_null_confirmedAt() {
+        // when
+        Settlement settlement = Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        );
+
+        // then
+        assertThat(settlement.status()).isEqualTo(SettlementStatus.PENDING);
+        assertThat(settlement.confirmedAt()).isNull();
+    }
+
+    @Test
+    @DisplayName("pendingSnapshot은 입력된 금액·건수를 그대로 보존한다")
+    void pendingSnapshot_preserves_all_amounts_and_counts() {
+        // when
+        Settlement settlement = Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        );
+
+        // then
+        assertThat(settlement.creatorId()).isEqualTo(CREATOR_ID);
+        assertThat(settlement.yearMonth()).isEqualTo(YEAR_MONTH);
+        assertThat(settlement.totalSales()).isEqualTo(TOTAL_SALES);
+        assertThat(settlement.totalRefund()).isEqualTo(TOTAL_REFUND);
+        assertThat(settlement.netSales()).isEqualTo(NET_SALES);
+        assertThat(settlement.feeRate()).isEqualTo(FEE_RATE);
+        assertThat(settlement.platformFee()).isEqualTo(PLATFORM_FEE);
+        assertThat(settlement.expectedPayout()).isEqualTo(EXPECTED_PAYOUT);
+        assertThat(settlement.salesCount()).isEqualTo(5L);
+        assertThat(settlement.cancellationCount()).isEqualTo(2L);
+    }
+
+    @Test
+    @DisplayName("not-null 필드가 null이면 거부된다")
+    void rejects_null_required_fields() {
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                null, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, null,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                null, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, null, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, null,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                null, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, null, EXPECTED_PAYOUT,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, null,
+                5L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("salesCount가 음수면 거부된다")
+    void rejects_negative_salesCount() {
+        // when
+        // then
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                -1L, 2L
+        )).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("cancellationCount가 음수면 거부된다")
+    void rejects_negative_cancellationCount() {
+        // when
+        // then
+        assertThatThrownBy(() -> Settlement.pendingSnapshot(
+                CREATOR_ID, YEAR_MONTH,
+                TOTAL_SALES, TOTAL_REFUND, NET_SALES,
+                FEE_RATE, PLATFORM_FEE, EXPECTED_PAYOUT,
+                5L, -1L
+        )).isInstanceOf(IllegalArgumentException.class);
+    }
+}
