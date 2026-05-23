@@ -90,7 +90,26 @@ public class JpaSalesRepository implements SalesRepository {
 
     @Override
     public List<CancellationView> findCancellationsByDateRange(LocalDateTime from, LocalDateTime toExclusive) {
-        throw new UnsupportedOperationException("단계 5 인프라에서 구현");
+        List<CancellationRecordJpaEntity> cancellations = cancellationDataRepository.findByCancelledAtBetween(from, toExclusive);
+        if (cancellations.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> salesIds = cancellations.stream().map(CancellationRecordJpaEntity::getSalesRecordId).distinct().toList();
+        List<SalesRecordJpaEntity> sales = salesDataRepository.findAllByIdIn(salesIds);
+        Map<Long, Long> creatorIdBySalesId = sales.stream()
+                .collect(Collectors.toMap(SalesRecordJpaEntity::getId, s -> s.getCourse().getCreatorId()));
+
+        return cancellations.stream()
+                .map(c -> {
+                    Long creatorIdValue = creatorIdBySalesId.get(c.getSalesRecordId());
+                    if (creatorIdValue == null) {
+                        return null;
+                    }
+                    return new CancellationView(SalesRecordMapper.toDomainCancellation(c), CreatorId.of(creatorIdValue));
+                })
+                .filter(view -> view != null)
+                .toList();
     }
 
     @Override

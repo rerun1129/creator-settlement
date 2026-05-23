@@ -28,6 +28,6 @@ public class JpaCreatorRepository implements CreatorRepository {
 
     @Override
     public List<CreatorId> findAllCreatorIds() {
-        throw new UnsupportedOperationException("단계 5에서 구현");
+        return dataRepository.findAllIds().stream().map(CreatorId::of).toList();
     }
 }
