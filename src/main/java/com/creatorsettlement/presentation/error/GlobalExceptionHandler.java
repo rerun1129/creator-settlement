@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -39,6 +40,18 @@ public class GlobalExceptionHandler {
                 .reduce((a, b) -> a + "; " + b).orElse("validation failed");
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(400, "VALIDATION", msg));
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e) {
+        return ResponseEntity.internalServerError()
+                .body(ErrorResponse.of(500, "INTERNAL", e.getMessage() == null ? "내부 상태 오류가 발생했습니다" : e.getMessage()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        return ResponseEntity.badRequest()
+                .body(ErrorResponse.of(400, "VALIDATION", e.getName() + ": 형식이 올바르지 않습니다"));
     }
 
     @ExceptionHandler(Exception.class)
