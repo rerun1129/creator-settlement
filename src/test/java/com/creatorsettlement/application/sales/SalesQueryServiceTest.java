@@ -7,6 +7,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
+import com.creatorsettlement.domain.service.sales.CancellationRegistrationPolicy;
 import com.creatorsettlement.domain.service.sales.RefundPolicy;
 import com.creatorsettlement.domain.service.sales.SaleRegistrationPolicy;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
@@ -34,7 +35,8 @@ class SalesQueryServiceTest {
         repository = new InMemorySalesRepository(courseRepository);
         RefundPolicy refundPolicy = new RefundPolicy(repository);
         SaleRegistrationPolicy registrationPolicy = new SaleRegistrationPolicy(courseRepository, repository);
-        service = new SalesServiceImpl(repository, refundPolicy, registrationPolicy);
+        CancellationRegistrationPolicy cancellationRegistrationPolicy = new CancellationRegistrationPolicy(repository);
+        service = new SalesServiceImpl(repository, refundPolicy, registrationPolicy, cancellationRegistrationPolicy);
     }
 
     @Test
