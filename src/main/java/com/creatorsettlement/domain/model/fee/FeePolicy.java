@@ -16,9 +16,6 @@ public class FeePolicy {
     }
 
     public static FeePolicy of(FeeRate rate, LocalDate effectiveFrom) {
-        if (rate == null) {
-            throw new IllegalArgumentException(DomainErrorMessage.FEE_POLICY_RATE_NULL.message());
-        }
         if (effectiveFrom == null) {
             throw new IllegalArgumentException(DomainErrorMessage.FEE_POLICY_EFFECTIVE_FROM_NULL.message());
         }

@@ -28,17 +28,6 @@ class FeePolicyTest {
     }
 
     @Test
-    @DisplayName("rate가 null이면 예외")
-    void of_throws_whenRateIsNull() {
-        // given
-        LocalDate effectiveFrom = LocalDate.of(2026, 1, 1);
-
-        // when & then
-        assertThatThrownBy(() -> FeePolicy.of(null, effectiveFrom))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     @DisplayName("effectiveFrom이 null이면 예외")
     void of_throws_whenEffectiveFromIsNull() {
         // given

@@ -21,7 +21,6 @@ public enum DomainErrorMessage {
     SETTLEMENT_ALREADY_CONFIRMED("이미 확정된 정산입니다", 409),
     SETTLEMENT_ALREADY_PAID("이미 지급된 정산입니다", 409),
     SETTLEMENT_NOT_CONFIRMED_FOR_PAYMENT("확정되지 않은 정산은 지급할 수 없습니다", 409),
-    FEE_POLICY_RATE_NULL("수수료 정책 수수료율이 누락되었습니다", 400),
     FEE_POLICY_EFFECTIVE_FROM_NULL("수수료 정책 적용 시작일이 누락되었습니다", 400);
 
     private final String message;
