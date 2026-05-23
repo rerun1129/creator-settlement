@@ -14,7 +14,7 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
     open-in-view: false
-    show-sql: false
+    show-sql: true
 
 server:
   port: ${SERVER_PORT:9090}
