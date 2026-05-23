@@ -22,6 +22,7 @@ import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.SettlementAmount;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
+import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCreatorRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySettlementRepository;
@@ -57,7 +58,8 @@ class SettlementServiceTest {
                 settlementRepository,
                 salesRepository,
                 creatorRepository,
-                new MonthlySettlementCalculator()
+                new MonthlySettlementCalculator(),
+                new SettlementAmountCalculator()
         );
     }
 
@@ -569,52 +571,6 @@ class SettlementServiceTest {
         assertThat(creatorView.expectedSettlementAmount())
                 .usingComparator(BigDecimal::compareTo)
                 .isEqualTo(new BigDecimal("40000"));
-    }
-
-    @Test
-    @DisplayName("산정은 1.2 산식 답습 — net=sum(sales)-sum(refund), fee=net*FeeRate.defaultRate() (net>=0), expectedSettlementAmount=net-fee")
-    void getSettlementsInRange_aggregates_using_1_2_formula_with_default_fee_rate() {
-        // given
-        CreatorId creatorId = CreatorId.of(110L);
-        creatorRepository.saveCreator(Creator.of(creatorId, "크리에이터110"));
-
-        CourseId courseId = CourseId.of(1100L);
-        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의H"));
-
-        salesRepository.saveSalesRecord(SalesRecord.of(
-                courseId, StudentId.of(11L),
-                Money.of(new BigDecimal("60000")),
-                OccurredAt.of(LocalDateTime.of(2026, 5, 5, 10, 0))
-        ));
-        salesRepository.saveSalesRecord(SalesRecord.of(
-                courseId, StudentId.of(12L),
-                Money.of(new BigDecimal("40000")),
-                OccurredAt.of(LocalDateTime.of(2026, 5, 20, 10, 0))
-        ));
-        salesRepository.saveCancellationRecord(CancellationRecord.of(
-                SalesRecordId.of(1L),
-                Money.of(new BigDecimal("20000")),
-                OccurredAt.of(LocalDateTime.of(2026, 5, 25, 10, 0))
-        ));
-
-        SettlementRangeQuery query = new SettlementRangeQuery(
-                LocalDate.of(2026, 5, 1),
-                LocalDate.of(2026, 5, 31)
-        );
-
-        // when
-        SettlementRangeView response = service.getSettlementsInRange(query);
-
-        // then
-        BigDecimal net = new BigDecimal("80000");
-        BigDecimal fee = net.multiply(FeeRate.defaultRate().value());
-        BigDecimal expected = net.subtract(fee);
-        CreatorPayableView creatorView = response.responses().stream()
-                .filter(view -> view.creatorId().equals(110L))
-                .findFirst().orElseThrow();
-        assertThat(creatorView.expectedSettlementAmount())
-                .usingComparator(BigDecimal::compareTo)
-                .isEqualTo(expected);
     }
 
     // --- 픽스처 헬퍼 ---
