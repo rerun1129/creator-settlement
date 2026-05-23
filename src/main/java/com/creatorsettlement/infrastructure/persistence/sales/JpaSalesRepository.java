@@ -8,6 +8,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
+import com.creatorsettlement.domain.repository.sales.dto.CancellationView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
@@ -85,6 +86,11 @@ public class JpaSalesRepository implements SalesRepository {
                 .collect(Collectors.groupingBy(CancellationRecordJpaEntity::getSalesRecordId));
 
         return SalesRecordViewAssembler.assemble(sales, cancelByRecordId);
+    }
+
+    @Override
+    public List<CancellationView> findCancellationsByDateRange(LocalDateTime from, LocalDateTime toExclusive) {
+        throw new UnsupportedOperationException("단계 5 인프라에서 구현");
     }
 
     @Override

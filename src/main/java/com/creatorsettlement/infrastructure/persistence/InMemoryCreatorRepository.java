@@ -24,6 +24,6 @@ public class InMemoryCreatorRepository implements CreatorRepository {
 
     @Override
     public List<CreatorId> findAllCreatorIds() {
-        throw new UnsupportedOperationException("단계 3 어플리케이션 GREEN에서 구현");
+        return List.copyOf(creatorsById.keySet());
     }
 }

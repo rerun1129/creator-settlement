@@ -8,6 +8,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
+import com.creatorsettlement.domain.repository.sales.dto.CancellationView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
@@ -131,6 +132,40 @@ public class InMemorySalesRepository implements SalesRepository {
                         cancellationsBySaleId.getOrDefault(s.id(), List.of()),
                         creatorIdByCourseId.get(s.record().getCourseId())
                 ))
+                .toList();
+    }
+
+    @Override
+    public List<CancellationView> findCancellationsByDateRange(LocalDateTime from, LocalDateTime toExclusive) {
+        List<CancellationRecord> filtered = cancellations.stream()
+                .filter(c -> {
+                    LocalDateTime cancelledAt = c.getCancelledAt().value();
+                    return !cancelledAt.isBefore(from) && cancelledAt.isBefore(toExclusive);
+                })
+                .toList();
+        if (filtered.isEmpty()) {
+            return List.of();
+        }
+        List<CourseId> courseIds = filtered.stream()
+                .map(c -> salesById.get(c.getSalesRecordId()))
+                .filter(sale -> sale != null)
+                .map(SalesRecord::getCourseId)
+                .distinct()
+                .toList();
+        Map<CourseId, CreatorId> creatorIdByCourseId = courseRepository.findCreatorIdsByCourseIds(courseIds);
+        return filtered.stream()
+                .map(c -> {
+                    SalesRecord sale = salesById.get(c.getSalesRecordId());
+                    if (sale == null) {
+                        return null;
+                    }
+                    CreatorId creatorId = creatorIdByCourseId.get(sale.getCourseId());
+                    if (creatorId == null) {
+                        return null;
+                    }
+                    return new CancellationView(c, creatorId);
+                })
+                .filter(view -> view != null)
                 .toList();
     }
 
