@@ -45,11 +45,12 @@ CREATE TABLE cancellation_record (
     CONSTRAINT fk_cancel_sales FOREIGN KEY (sales_record_id) REFERENCES sales_record (sales_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='환불 이력 (결제 → 환불)';
 CREATE INDEX idx_cancel_sales ON cancellation_record (sales_record_id);
+CREATE INDEX idx_cancel_cancelled_at ON cancellation_record (cancelled_at);
 
 CREATE TABLE settlement (
     settlement_id      BIGINT        NOT NULL AUTO_INCREMENT PRIMARY KEY,
     creator_id         BIGINT        NOT NULL,
-    year_month         VARCHAR(6)    NOT NULL                         COMMENT 'YYYYMM',
+    target_month       VARCHAR(6)    NOT NULL                         COMMENT 'YYYYMM (정산 대상 월; year_month는 MySQL reserved word라 회피)',
     status             VARCHAR(20)   NOT NULL DEFAULT 'PENDING'       COMMENT 'PENDING | CONFIRMED | PAID',
     total_sales        DECIMAL(19,2) NOT NULL,
     total_refund       DECIMAL(19,2) NOT NULL,
@@ -63,7 +64,7 @@ CREATE TABLE settlement (
     paid_at            DATETIME(6)   NULL,
     created_at         DATETIME(6)   NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     updated_at         DATETIME(6)   NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    CONSTRAINT uk_settlement_creator_yearmonth UNIQUE (creator_id, year_month)
+    CONSTRAINT uk_settlement_creator_target_month UNIQUE (creator_id, target_month)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='월별 정산 스냅샷 (creator 라이프사이클과 분리된 감사 로그 성격으로 FK 미적용)';
 
 CREATE TABLE fee_policy (

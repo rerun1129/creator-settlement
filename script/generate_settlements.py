@@ -11,11 +11,11 @@ Usage:
   - fee_policy V5 초기값 (rate=0.2000, effective_from='2020-01-01') 단일 정책 그대로 적용
 
 생성 정책:
-  - (creator_id, year_month) 단위 1행
+  - (creator_id, target_month) 단위 1행
   - 거래(sales 또는 cancellation) 발생한 조합만 생성 (빈 월 스킵)
-  - year_month > '202604' (진행 중인 월) 은 정산 대상 아님 → 행 생성하지 않음
-  - year_month <= '202603' → PAID  (confirmed_at + paid_at 모두 채움)
-  - year_month == '202604' → CONFIRMED (confirmed_at만 채움, paid_at NULL)
+  - target_month > '202604' (진행 중인 월) 은 정산 대상 아님 → 행 생성하지 않음
+  - target_month <= '202603' → PAID  (confirmed_at + paid_at 모두 채움)
+  - target_month == '202604' → CONFIRMED (confirmed_at만 채움, paid_at NULL)
   - confirmed_at = 정산 월의 **다음 달 1일** + 임의 시간 (00:00:00.000000 ~ 23:59:59.999999)
   - paid_at      = 정산 월의 **다음 달 15일** + 임의 시간 (PAID 한정)
   - 산식: net = sales - refund, fee = net<0 ? 0 : ROUND(net*0.2, 0, HALF_UP), payout = net - fee
@@ -213,7 +213,7 @@ def insert_settlements(env: dict, rows: list[tuple]) -> None:
         values = ",".join(values_parts)
         run_sql(
             env,
-            "INSERT INTO settlement (creator_id, `year_month`, status, "
+            "INSERT INTO settlement (creator_id, target_month, status, "
             "total_sales, total_refund, net_sales, "
             "fee_rate, platform_fee, expected_payout, "
             "sales_count, cancellation_count, "
@@ -239,7 +239,7 @@ def summarize_rows(rows: list[tuple]) -> None:
     print(f"[summary] total settlement rows: {len(rows)}")
     print(f"[summary] by status: {by_status}")
     print(f"[summary] negative net_sales rows (platform_fee forced to 0): {negative_net}")
-    print("[summary] by year_month:")
+    print("[summary] by target_month:")
     for ym in sorted(by_ym):
         print(f"           {ym}: {by_ym[ym]}")
 
@@ -280,17 +280,17 @@ def verify(env: dict) -> dict:
     ).strip() or 0)
     boundary_paid_violators = int(run_sql(
         env,
-        f"SELECT COUNT(*) FROM settlement WHERE `year_month` <= '{PAID_MAX_YM}' AND status <> 'PAID';",
+        f"SELECT COUNT(*) FROM settlement WHERE target_month <= '{PAID_MAX_YM}' AND status <> 'PAID';",
         capture=True,
     ).strip() or 0)
     boundary_confirmed_violators = int(run_sql(
         env,
-        f"SELECT COUNT(*) FROM settlement WHERE `year_month` > '{PAID_MAX_YM}' AND status <> 'CONFIRMED';",
+        f"SELECT COUNT(*) FROM settlement WHERE target_month > '{PAID_MAX_YM}' AND status <> 'CONFIRMED';",
         capture=True,
     ).strip() or 0)
     unfinished_month_violators = int(run_sql(
         env,
-        f"SELECT COUNT(*) FROM settlement WHERE `year_month` > '{SETTLEMENT_MAX_YM}';",
+        f"SELECT COUNT(*) FROM settlement WHERE target_month > '{SETTLEMENT_MAX_YM}';",
         capture=True,
     ).strip() or 0)
     return {
@@ -318,11 +318,11 @@ def main() -> None:
     if not env["password"]:
         raise SystemExit("MYSQL_PASSWORD missing in .env")
 
-    print("[step] aggregating sales_record by (creator_id, year_month) ...")
+    print("[step] aggregating sales_record by (creator_id, target_month) ...")
     sales_agg = fetch_sales_aggregation(env)
     print(f"[step] sales groups: {len(sales_agg)}")
 
-    print("[step] aggregating cancellation_record by (creator_id, year_month) ...")
+    print("[step] aggregating cancellation_record by (creator_id, target_month) ...")
     cancel_agg = fetch_cancellation_aggregation(env)
     print(f"[step] cancellation groups: {len(cancel_agg)}")
 

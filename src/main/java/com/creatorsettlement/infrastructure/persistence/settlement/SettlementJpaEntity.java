@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
     name = "settlement",
-    uniqueConstraints = @UniqueConstraint(name = "uk_settlement_creator_yearmonth", columnNames = {"creator_id", "year_month"})
+    uniqueConstraints = @UniqueConstraint(name = "uk_settlement_creator_target_month", columnNames = {"creator_id", "target_month"})
 )
 public class SettlementJpaEntity extends BaseTimeEntity {
 
@@ -30,7 +30,7 @@ public class SettlementJpaEntity extends BaseTimeEntity {
     @Column(name = "creator_id", nullable = false)
     private Long creatorId;
 
-    @Column(name = "year_month", nullable = false, length = 6)
+    @Column(name = "target_month", nullable = false, length = 6)
     private String yearMonth;
 
     @Enumerated(EnumType.STRING)

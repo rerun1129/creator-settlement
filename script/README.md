@@ -4,7 +4,7 @@
 
 - **Phase 1** `generate_data.py` — Creator 1,000 + Course 10,000
 - **Phase 2** `generate_transactions.py` — Sales 3,000,000 + Cancellation 150,000
-- **Phase 3** `generate_settlements.py` — Settlement (creator, year_month) 단위, 거래 있는 조합만
+- **Phase 3** `generate_settlements.py` — Settlement (creator, target_month) 단위, 거래 있는 조합만
 
 세 스크립트는 완전히 독립이며 서로 import하지 않는다. (utility 함수 코드 중복 허용)
 
@@ -106,7 +106,7 @@ ORDER BY course_n DESC LIMIT 10;
 
 ## creator 활성 월 분포 (sparse)
 
-각 creator마다 활성 월 set을 부여 → **비활성 월에는 그 creator의 어떤 course에서도 sales 발생하지 않음**. 결과적으로 settlement 테이블에서도 자연스럽게 빈 월이 생겨 (creator, year_month) 조합 일부가 누락됨.
+각 creator마다 활성 월 set을 부여 → **비활성 월에는 그 creator의 어떤 course에서도 sales 발생하지 않음**. 결과적으로 settlement 테이블에서도 자연스럽게 빈 월이 생겨 (creator, target_month) 조합 일부가 누락됨.
 
 | 분류 | creator 비율 | 휴지기 길이 |
 |------|--------------|------------|
@@ -216,20 +216,20 @@ FROM sales_record GROUP BY tier ORDER BY sales_n DESC;
 
 ## 산출 데이터
 
-- `settlement` — **(creator_id, `year_month`)** 단위 1행
+- `settlement` — **(creator_id, `target_month`)** 단위 1행
   - 거래(sales 또는 cancellation 어느 쪽이든) 있는 조합만 생성 (빈 월 스킵)
   - 정산 대상 월: **2025-06 ~ 2026-04** (11개월). 진행 중인 월(오늘 2026-05-24 기준 2026-05)은 정산 대상 아님 → 행 생성하지 않음.
-  - Phase 2의 creator 활성 월 분포(평균 활성 ~10.5/12)에 따라 일부 (creator, year_month) 조합은 자연스럽게 누락됨 → 약 **~9K건** 예상
+  - Phase 2의 creator 활성 월 분포(평균 활성 ~10.5/12)에 따라 일부 (creator, target_month) 조합은 자연스럽게 누락됨 → 약 **~9K건** 예상
 
 ## 상태 / 시각 정책
 
-| `year_month` | `status` | `confirmed_at` | `paid_at` |
+| `target_month` | `status` | `confirmed_at` | `paid_at` |
 |--------------|----------|----------------|-----------|
 | `<= 202603` (25/06 ~ 26/03, 10개월) | `PAID` | 정산 월 **다음 달 1일** + 임의 시간 | 정산 월 **다음 달 15일** + 임의 시간 |
 | `== 202604` (26/04, 1개월) | `CONFIRMED` | 정산 월 **다음 달 1일** + 임의 시간 | `NULL` |
 | `>= 202605` (진행 중) | — | 행 생성하지 않음 | — |
 
-예: `year_month='202506'` → `confirmed_at` ∈ [2025-07-01 00:00:00, 2025-07-01 23:59:59.999999], `paid_at` ∈ [2025-07-15 00:00:00, 2025-07-15 23:59:59.999999]. `year_month='202604'` → `confirmed_at` ∈ 2026-05-01 일자 내 임의 시각.
+예: `target_month='202506'` → `confirmed_at` ∈ [2025-07-01 00:00:00, 2025-07-01 23:59:59.999999], `paid_at` ∈ [2025-07-15 00:00:00, 2025-07-15 23:59:59.999999]. `target_month='202604'` → `confirmed_at` ∈ 2026-05-01 일자 내 임의 시각.
 
 ## 산식
 
@@ -261,8 +261,8 @@ python script/generate_settlements.py
 
 ## 멱등성
 
-1. `sales_record JOIN course` 로 (creator_id, year_month) 집계 (count, SUM(payment_amount))
-2. `cancellation_record JOIN sales_record JOIN course` 로 (creator_id, year_month) 집계 (count, SUM(refund_amount))
+1. `sales_record JOIN course` 로 (creator_id, target_month) 집계 (count, SUM(payment_amount))
+2. `cancellation_record JOIN sales_record JOIN course` 로 (creator_id, target_month) 집계 (count, SUM(refund_amount))
 3. 두 집계의 key 합집합을 순회하며 settlement 행 in-memory 생성
 4. `TRUNCATE settlement`
 5. 1,000건 단위 multi-value INSERT
@@ -286,15 +286,15 @@ SELECT COUNT(*) FROM settlement WHERE status = 'PAID'      AND (confirmed_at IS 
 SELECT COUNT(*) FROM settlement WHERE status = 'CONFIRMED' AND (confirmed_at IS NULL OR paid_at IS NOT NULL);
 
 -- 경계 invariant (모두 0)
-SELECT COUNT(*) FROM settlement WHERE `year_month` <= '202603' AND status <> 'PAID';
-SELECT COUNT(*) FROM settlement WHERE `year_month` =  '202604' AND status <> 'CONFIRMED';
-SELECT COUNT(*) FROM settlement WHERE `year_month` >  '202604';   -- 진행 중인 월은 정산 대상 아님
+SELECT COUNT(*) FROM settlement WHERE `target_month` <= '202603' AND status <> 'PAID';
+SELECT COUNT(*) FROM settlement WHERE `target_month` =  '202604' AND status <> 'CONFIRMED';
+SELECT COUNT(*) FROM settlement WHERE `target_month` >  '202604';   -- 진행 중인 월은 정산 대상 아님
 
 -- 월별 / 상태별 분포
-SELECT `year_month`, status, COUNT(*) AS n
+SELECT `target_month`, status, COUNT(*) AS n
 FROM settlement
-GROUP BY `year_month`, status
-ORDER BY `year_month`, status;
+GROUP BY `target_month`, status
+ORDER BY `target_month`, status;
 
 -- 정산액(net) 분포 — 음수 행도 그대로 유지되어야 함
 SELECT
