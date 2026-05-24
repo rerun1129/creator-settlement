@@ -30,9 +30,7 @@ public interface SalesRepository {
 
     void saveCancellationRecord(CancellationRecord cancellationRecord);
 
-    List<SalesRecordView> findAllSalesView(LocalDateTime from, LocalDateTime toExclusive);
-
-    List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive);
+    List<SalesRecordView> findSalesViewPaged(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive, int page, int size);
 
     List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId);
 

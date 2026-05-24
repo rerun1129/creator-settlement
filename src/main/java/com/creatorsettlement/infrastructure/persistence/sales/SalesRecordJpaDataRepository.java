@@ -1,5 +1,6 @@
 package com.creatorsettlement.infrastructure.persistence.sales;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,6 +28,21 @@ public interface SalesRecordJpaDataRepository extends JpaRepository<SalesRecordJ
     List<SalesRecordJpaEntity> findAllByIdIn(@Param("ids") Collection<Long> ids);
 
     List<SalesRecordJpaEntity> findByCourse_IdAndStudentId(Long courseId, Long studentId);
+
+    @Query("SELECT s FROM SalesRecordJpaEntity s WHERE s.paidAt >= :from AND s.paidAt < :toExclusive")
+    List<SalesRecordJpaEntity> findByPeriodPaged(
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive,
+            Pageable pageable
+    );
+
+    @Query("SELECT s FROM SalesRecordJpaEntity s WHERE s.course.creatorId = :creatorId AND s.paidAt >= :from AND s.paidAt < :toExclusive")
+    List<SalesRecordJpaEntity> findByCreatorIdAndPeriodPaged(
+            @Param("creatorId") Long creatorId,
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive,
+            Pageable pageable
+    );
 
     @Query("""
         SELECT new com.creatorsettlement.infrastructure.persistence.sales.MonthlySalesAggregateRow(

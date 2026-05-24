@@ -73,7 +73,7 @@ class SalesQueryServiceTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(null, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).hasSize(1);
@@ -103,7 +103,7 @@ class SalesQueryServiceTest {
         seedSale(10L, 4L, "10000", toExclusive);
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(null, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).hasSize(2);
@@ -127,7 +127,7 @@ class SalesQueryServiceTest {
         seedSale(20L, 3L, "30000", LocalDateTime.of(2026, 4, 15, 10, 0));
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(100L, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(100L, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).hasSize(2);
@@ -150,7 +150,7 @@ class SalesQueryServiceTest {
         seedSale(20L, 2L, "20000", LocalDateTime.of(2026, 4, 10, 10, 0));
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(null, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).hasSize(2);
@@ -168,7 +168,7 @@ class SalesQueryServiceTest {
         seedCancellation(1L, "2000", LocalDateTime.of(2026, 4, 15, 10, 0));
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(null, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).hasSize(1);
@@ -185,7 +185,7 @@ class SalesQueryServiceTest {
         seedSale(10L, 1L, "10000", LocalDateTime.of(2026, 4, 5, 10, 0));
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(null, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).hasSize(1);
@@ -203,7 +203,7 @@ class SalesQueryServiceTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 6, 1, 0, 0);
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(null, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(null, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).isEmpty();
@@ -220,7 +220,7 @@ class SalesQueryServiceTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // When
-        List<SalesListItem> result = service.listSales(new ListSalesQuery(999L, from, toExclusive));
+        List<SalesListItem> result = service.listSales(ListSalesQuery.of(999L, from, toExclusive, 0, 1000));
 
         // Then
         assertThat(result).isEmpty();

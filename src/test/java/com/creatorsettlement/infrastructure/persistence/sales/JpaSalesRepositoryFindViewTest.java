@@ -52,7 +52,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorId), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesViewPaged(CreatorId.of(creatorId), from, toExclusive, 0, 1000);
 
         // then
         assertThat(result).hasSize(2);
@@ -89,7 +89,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorIdA), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesViewPaged(CreatorId.of(creatorIdA), from, toExclusive, 0, 1000);
 
         // then
         assertThat(result).hasSize(2);
@@ -113,7 +113,7 @@ class JpaSalesRepositoryFindViewTest {
         em.clear();
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorId), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesViewPaged(CreatorId.of(creatorId), from, toExclusive, 0, 1000);
 
         // then
         assertThat(result).hasSize(2);
@@ -141,7 +141,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findAllSalesView(from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesViewPaged(null, from, toExclusive, 0, 1000);
 
         // then
         assertThat(result).hasSize(2);
@@ -162,7 +162,7 @@ class JpaSalesRepositoryFindViewTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 5, 1, 0, 0);
 
         // when
-        List<SalesRecordView> result = sut.findSalesView(CreatorId.of(creatorId), from, toExclusive);
+        List<SalesRecordView> result = sut.findSalesViewPaged(CreatorId.of(creatorId), from, toExclusive, 0, 1000);
 
         // then
         assertThat(result).hasSize(1);

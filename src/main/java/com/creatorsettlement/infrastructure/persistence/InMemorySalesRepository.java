@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -98,17 +99,23 @@ public class InMemorySalesRepository implements SalesRepository {
     }
 
     @Override
-    public List<SalesRecordView> findAllSalesView(LocalDateTime from, LocalDateTime toExclusive) {
-        return buildViews(findByPeriod(from, toExclusive));
-    }
-
-    @Override
-    public List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive) {
-        List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
-        if (courseIds.isEmpty()) {
-            return List.of();
+    public List<SalesRecordView> findSalesViewPaged(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive, int page, int size) {
+        List<SalesRecordWithId> filtered;
+        if (creatorId == null) {
+            filtered = findByPeriod(from, toExclusive);
+        } else {
+            List<CourseId> courseIds = courseRepository.findCourseIdsByCreatorId(creatorId);
+            if (courseIds.isEmpty()) {
+                return List.of();
+            }
+            filtered = findByPeriodAndCourseIds(from, toExclusive, courseIds);
         }
-        return buildViews(findByPeriodAndCourseIds(from, toExclusive, courseIds));
+        List<SalesRecordWithId> paged = filtered.stream()
+                .sorted(Comparator.comparing((SalesRecordWithId s) -> s.record().getPaidAt().value()).reversed())
+                .skip((long) page * size)
+                .limit(size)
+                .toList();
+        return buildViews(paged);
     }
 
     private Set<CourseId> courseIdSetOf(CreatorId creatorId) {

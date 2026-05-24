@@ -23,7 +23,7 @@ class ListSalesQueryTest {
         LocalDateTime toExclusive = LocalDateTime.of(2026, 4, 1, 0, 0);
 
         // When / Then
-        assertThatThrownBy(() -> new ListSalesQuery(creatorId, from, toExclusive))
+        assertThatThrownBy(() -> ListSalesQuery.of(creatorId, from, toExclusive, 0, 1000))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -32,10 +32,12 @@ class ListSalesQueryTest {
     void toCreatorId_returnsOptionalOfCreatorId_whenCreatorIdIsPresent() {
         // Given
         Long creatorId = 100L;
-        ListSalesQuery query = new ListSalesQuery(
+        ListSalesQuery query = ListSalesQuery.of(
                 creatorId,
                 LocalDateTime.of(2026, 4, 1, 0, 0),
-                LocalDateTime.of(2026, 5, 1, 0, 0)
+                LocalDateTime.of(2026, 5, 1, 0, 0),
+                0,
+                1000
         );
 
         // When
@@ -50,10 +52,12 @@ class ListSalesQueryTest {
     @DisplayName("creatorId가 null이면 Optional.empty()를 반환한다")
     void toCreatorId_returnsEmpty_whenCreatorIdIsNull() {
         // Given
-        ListSalesQuery query = new ListSalesQuery(
+        ListSalesQuery query = ListSalesQuery.of(
                 null,
                 LocalDateTime.of(2026, 4, 1, 0, 0),
-                LocalDateTime.of(2026, 5, 1, 0, 0)
+                LocalDateTime.of(2026, 5, 1, 0, 0),
+                0,
+                1000
         );
 
         // When

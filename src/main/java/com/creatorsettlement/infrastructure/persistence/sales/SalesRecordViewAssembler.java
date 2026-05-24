@@ -15,7 +15,8 @@ class SalesRecordViewAssembler {
 
     static List<SalesRecordView> assemble(
             List<SalesRecordJpaEntity> sales,
-            Map<Long, List<CancellationRecordJpaEntity>> cancelByRecordId
+            Map<Long, List<CancellationRecordJpaEntity>> cancelByRecordId,
+            Map<Long, Long> creatorIdByCourseId
     ) {
         return sales.stream()
                 .map(entity -> {
@@ -25,7 +26,7 @@ class SalesRecordViewAssembler {
                             .stream()
                             .map(SalesRecordMapper::toDomainCancellation)
                             .toList();
-                    CreatorId creatorId = CreatorId.of(entity.getCourse().getCreatorId());
+                    CreatorId creatorId = CreatorId.of(creatorIdByCourseId.get(entity.getCourse().getId()));
                     return new SalesRecordView(salesRecordId, SalesRecordMapper.toDomainSalesRecord(entity), cancellations, creatorId);
                 })
                 .toList();

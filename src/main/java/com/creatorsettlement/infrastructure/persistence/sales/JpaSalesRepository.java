@@ -14,9 +14,13 @@ import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
+import com.creatorsettlement.infrastructure.persistence.course.CourseJpaDataRepository;
 import com.creatorsettlement.infrastructure.persistence.course.CourseJpaEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -32,13 +36,15 @@ public class JpaSalesRepository implements SalesRepository {
 
     private final SalesRecordJpaDataRepository salesDataRepository;
     private final CancellationJpaDataRepository cancellationDataRepository;
+    private final CourseJpaDataRepository courseDataRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    public JpaSalesRepository(SalesRecordJpaDataRepository salesDataRepository, CancellationJpaDataRepository cancellationDataRepository) {
+    public JpaSalesRepository(SalesRecordJpaDataRepository salesDataRepository, CancellationJpaDataRepository cancellationDataRepository, CourseJpaDataRepository courseDataRepository) {
         this.salesDataRepository = salesDataRepository;
         this.cancellationDataRepository = cancellationDataRepository;
+        this.courseDataRepository = courseDataRepository;
     }
 
     @Override
@@ -69,13 +75,12 @@ public class JpaSalesRepository implements SalesRepository {
     }
 
     @Override
-    public List<SalesRecordView> findAllSalesView(LocalDateTime from, LocalDateTime toExclusive) {
-        return assembleViews(salesDataRepository.findByPeriod(from, toExclusive));
-    }
-
-    @Override
-    public List<SalesRecordView> findSalesView(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive) {
-        return assembleViews(salesDataRepository.findByCreatorIdAndPeriod(creatorId.value(), from, toExclusive));
+    public List<SalesRecordView> findSalesViewPaged(CreatorId creatorId, LocalDateTime from, LocalDateTime toExclusive, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "paidAt"));
+        List<SalesRecordJpaEntity> sales = (creatorId == null)
+                ? salesDataRepository.findByPeriodPaged(from, toExclusive, pageable)
+                : salesDataRepository.findByCreatorIdAndPeriodPaged(creatorId.value(), from, toExclusive, pageable);
+        return assembleViews(sales);
     }
 
     private List<SalesRecordView> assembleViews(List<SalesRecordJpaEntity> sales) {
@@ -83,12 +88,16 @@ public class JpaSalesRepository implements SalesRepository {
             return List.of();
         }
 
+        List<Long> courseIds = sales.stream().map(s -> s.getCourse().getId()).distinct().toList();
+        Map<Long, Long> creatorIdByCourseId = courseDataRepository.findAllById(courseIds).stream()
+                .collect(Collectors.toMap(CourseJpaEntity::getId, CourseJpaEntity::getCreatorId));
+
         List<Long> salesIds = sales.stream().map(SalesRecordJpaEntity::getId).toList();
         List<CancellationRecordJpaEntity> cancellations = cancellationDataRepository.findAllBySalesRecordIdIn(salesIds);
         Map<Long, List<CancellationRecordJpaEntity>> cancelByRecordId = cancellations.stream()
                 .collect(Collectors.groupingBy(CancellationRecordJpaEntity::getSalesRecordId));
 
-        return SalesRecordViewAssembler.assemble(sales, cancelByRecordId);
+        return SalesRecordViewAssembler.assemble(sales, cancelByRecordId, creatorIdByCourseId);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.creatorsettlement.application.sales.dto.RegisterSaleCommand;
 import com.creatorsettlement.application.sales.dto.SalesListItem;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
+import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
@@ -56,9 +57,9 @@ public class SalesServiceImpl implements SalesService {
     @Transactional(readOnly = true)
     @Override
     public List<SalesListItem> listSales(ListSalesQuery query) {
-        List<SalesRecordView> views = query.toCreatorId()
-                .map(creatorId -> salesRepository.findSalesView(creatorId, query.from(), query.toExclusive()))
-                .orElseGet(() -> salesRepository.findAllSalesView(query.from(), query.toExclusive()));
+        CreatorId creatorId = query.toCreatorId().orElse(null);
+        List<SalesRecordView> views = salesRepository.findSalesViewPaged(
+                creatorId, query.from(), query.toExclusive(), query.page(), query.size());
         return views.stream()
                 .map(SalesListItem::from)
                 .toList();

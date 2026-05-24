@@ -2,14 +2,19 @@ package com.creatorsettlement.application.sales.dto;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.vo.CreatorId;
+
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-public record ListSalesQuery(Long creatorId, LocalDateTime from, LocalDateTime toExclusive) {
+public record ListSalesQuery(Long creatorId, LocalDateTime from, LocalDateTime toExclusive, int page, int size) {
     public ListSalesQuery {
         if (from.isAfter(toExclusive)) {
             throw new IllegalArgumentException(DomainErrorMessage.LIST_SALES_PERIOD_INVALID.message());
         }
+    }
+
+    public static ListSalesQuery of(Long creatorId, LocalDateTime from, LocalDateTime toExclusive, int page, int size) {
+        return new ListSalesQuery(creatorId, from, toExclusive, page, size);
     }
 
     public Optional<CreatorId> toCreatorId() {
