@@ -20,8 +20,12 @@ import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.SettlementAmount;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
+import com.creatorsettlement.domain.service.settlement.CreatorRangePayoutCalculator;
 import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
+import com.creatorsettlement.domain.service.settlement.PendingSettlementResolver;
+import com.creatorsettlement.domain.service.settlement.RequiredSettlementResolver;
 import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
+import com.creatorsettlement.domain.service.settlement.SettlementRangePayoutAssembler;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCreatorRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryFeePolicyRepository;
@@ -68,15 +72,19 @@ class SettlementServiceLifecycleTest {
             feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
             SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
             SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
+            PendingSettlementResolver pendingSettlementResolver = new PendingSettlementResolver(
+                    salesRepository, feePolicyService, new MonthlySettlementCalculator());
+            RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
+            SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
+                    salesRepository, creatorRepository,
+                    new CreatorRangePayoutCalculator(new SettlementAmountCalculator(), feePolicyService));
             service = new SettlementServiceImpl(
                     settlementRepository,
-                    salesRepository,
-                    creatorRepository,
-                    new MonthlySettlementCalculator(),
-                    new SettlementAmountCalculator(),
-                    feePolicyService,
                     settlementExcelWriter,
-                    monthClosurePolicy
+                    monthClosurePolicy,
+                    pendingSettlementResolver,
+                    requiredSettlementResolver,
+                    settlementRangePayoutAssembler
             );
         }
 
@@ -255,15 +263,19 @@ class SettlementServiceLifecycleTest {
             feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
             SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
             SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
+            PendingSettlementResolver pendingSettlementResolver = new PendingSettlementResolver(
+                    salesRepository, feePolicyService, new MonthlySettlementCalculator());
+            RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
+            SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
+                    salesRepository, creatorRepository,
+                    new CreatorRangePayoutCalculator(new SettlementAmountCalculator(), feePolicyService));
             service = new SettlementServiceImpl(
                     settlementRepository,
-                    salesRepository,
-                    creatorRepository,
-                    new MonthlySettlementCalculator(),
-                    new SettlementAmountCalculator(),
-                    feePolicyService,
                     settlementExcelWriter,
-                    monthClosurePolicy
+                    monthClosurePolicy,
+                    pendingSettlementResolver,
+                    requiredSettlementResolver,
+                    settlementRangePayoutAssembler
             );
         }
 
