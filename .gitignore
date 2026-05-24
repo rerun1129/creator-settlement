@@ -39,3 +39,9 @@ Thumbs.db
 
 ### Logs ###
 *.log
+
+### Load test ###
+load-test/
+
+### HTTP scenarios (개인 실험용) ###
+http/scenarios/except/
