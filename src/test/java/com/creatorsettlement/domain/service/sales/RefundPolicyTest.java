@@ -113,4 +113,28 @@ class RefundPolicyTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
     }
+
+    @Test
+    @DisplayName("이전 환불 누적이 결제와 동일하여 잔여가 0인 상태에서 추가 환불 시도 시 예외가 발생한다")
+    void enforceRefundLimit_throwsException_whenAdditionalRefundRequestedAfterFullyRefunded() {
+        // Given
+        SalesRecord sale = SalesRecord.of(
+                CourseId.of(1L),
+                StudentId.of(2L),
+                Money.of(new BigDecimal("10000")),
+                OccurredAt.of(LocalDateTime.of(2026, 5, 1, 10, 0, 0))
+        );
+        salesRepository.saveSalesRecord(sale);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+        salesRepository.saveCancellationRecord(CancellationRecord.of(
+                salesRecordId,
+                Money.of(new BigDecimal("10000")),
+                OccurredAt.of(LocalDateTime.of(2026, 5, 5, 10, 0, 0))
+        ));
+
+        // When & Then
+        assertThatThrownBy(() -> policy.enforceRefundLimit(sale, salesRecordId, Money.of(new BigDecimal("1"))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
+    }
 }
