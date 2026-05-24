@@ -137,4 +137,23 @@ class RefundPolicyTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(DomainErrorMessage.REFUND_EXCEEDS_REMAINING.message());
     }
+
+    @Test
+    @DisplayName("환불 금액이 0이면 예외가 발생한다")
+    void enforceRefundLimit_throwsException_whenRefundAmountIsZero() {
+        // Given
+        SalesRecord sale = SalesRecord.of(
+                CourseId.of(1L),
+                StudentId.of(2L),
+                Money.of(new BigDecimal("10000")),
+                OccurredAt.of(LocalDateTime.of(2026, 5, 1, 10, 0, 0))
+        );
+        salesRepository.saveSalesRecord(sale);
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+
+        // When & Then
+        assertThatThrownBy(() -> policy.enforceRefundLimit(sale, salesRecordId, Money.of(BigDecimal.ZERO)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(DomainErrorMessage.REFUND_AMOUNT_NOT_POSITIVE.message());
+    }
 }

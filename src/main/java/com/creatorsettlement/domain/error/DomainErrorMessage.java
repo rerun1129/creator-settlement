@@ -8,6 +8,7 @@ public enum DomainErrorMessage {
     STUDENT_ID_NULL("학생 정보가 누락되었습니다", 400),
     CREATOR_ID_NULL("크리에이터 정보가 누락되었습니다", 400),
     SALES_RECORD_ID_NULL("원본 판매 내역 정보가 누락되었습니다", 400),
+    REFUND_AMOUNT_NOT_POSITIVE("환불 금액은 0보다 커야 합니다", 400),
     REFUND_EXCEEDS_REMAINING("환불 금액은 잔여 환불 가능 금액을 초과할 수 없습니다", 400),
     SALES_RECORD_NOT_FOUND("원본 판매 내역을 찾을 수 없습니다", 400),
     LIST_SALES_PERIOD_INVALID("조회 시작 일시가 종료 일시보다 늦을 수 없습니다", 400),

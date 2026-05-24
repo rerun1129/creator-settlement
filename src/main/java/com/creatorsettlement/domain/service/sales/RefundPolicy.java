@@ -16,6 +16,9 @@ public class RefundPolicy {
     }
 
     public void enforceRefundLimit(SalesRecord sale, SalesRecordId salesRecordId, Money refundAmount) {
+        if (refundAmount.value().signum() <= 0) {
+            throw new IllegalArgumentException(DomainErrorMessage.REFUND_AMOUNT_NOT_POSITIVE.message());
+        }
         Cancellations cancellations = Cancellations.of(salesRepository.findCancellationsBySalesRecordId(salesRecordId));
         Money remain = cancellations.remainingOf(sale.getPaymentAmount());
         if (refundAmount.value().compareTo(remain.value()) > 0) {
