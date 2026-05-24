@@ -96,4 +96,19 @@ class SettlementAmountCalculatorTest {
         BigDecimal expected = new BigDecimal("12345").subtract(expectedFee);
         assertThat(actual).usingComparator(BigDecimal::compareTo).isEqualTo(expected);
     }
+
+    @Test
+    @DisplayName(".5 분수 결과는 HALF_UP으로 +1 올림된다 (net=5, rate=0.5 -> fee=3, expected=2)")
+    void rounds_fee_with_half_up_when_fraction_is_exactly_half() {
+        // given
+        Money totalSales = Money.of(new BigDecimal("5"));
+        Money totalRefund = Money.of(BigDecimal.ZERO);
+        FeeRate feeRate = FeeRate.of(new BigDecimal("0.5"));
+
+        // when
+        BigDecimal actual = calculator.calculateExpectedPayout(totalSales, totalRefund, feeRate);
+
+        // then
+        assertThat(actual).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("2"));
+    }
 }
