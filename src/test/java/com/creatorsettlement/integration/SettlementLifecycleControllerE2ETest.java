@@ -24,8 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.ZoneId;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -166,40 +164,6 @@ class SettlementLifecycleControllerE2ETest {
                     .andExpect(jsonPath("$.code").value("VALIDATION"));
         }
 
-        @Test
-        @DisplayName("현재 KST 월 confirm 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
-        void confirm_returns_409_when_target_month_is_current_kst_month() throws Exception {
-            long creatorId = saveCreator("크리에이터 가드 현재");
-            saveCourse(creatorId, "강의 가드 현재");
-            YearMonth current = YearMonth.now(ZoneId.of("Asia/Seoul"));
-            String body = """
-                    {"creatorId":%d,"yearMonth":"%s","confirmedAt":"2026-01-01T10:00:00"}
-                    """.formatted(creatorId, current.toString());
-
-            mockMvc.perform(post("/api/settlements/confirm")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
-        }
-
-        @Test
-        @DisplayName("미래 월 confirm 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
-        void confirm_returns_409_when_target_month_is_future() throws Exception {
-            long creatorId = saveCreator("크리에이터 가드 미래");
-            saveCourse(creatorId, "강의 가드 미래");
-            YearMonth future = YearMonth.now(ZoneId.of("Asia/Seoul")).plusMonths(1);
-            String body = """
-                    {"creatorId":%d,"yearMonth":"%s","confirmedAt":"2026-01-01T10:00:00"}
-                    """.formatted(creatorId, future.toString());
-
-            mockMvc.perform(post("/api/settlements/confirm")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
-        }
-
         private long saveCreator(String name) {
             CreatorJpaEntity entity = CreatorJpaEntity.of(name);
             em.persist(entity);
@@ -329,36 +293,6 @@ class SettlementLifecycleControllerE2ETest {
                             .content(body))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("VALIDATION"));
-        }
-
-        @Test
-        @DisplayName("현재 KST 월 pay 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
-        void pay_returns_409_when_target_month_is_current_kst_month() throws Exception {
-            YearMonth current = YearMonth.now(ZoneId.of("Asia/Seoul"));
-            String body = """
-                    {"creatorId":1,"yearMonth":"%s","paidAt":"2026-01-01T10:00:00"}
-                    """.formatted(current.toString());
-
-            mockMvc.perform(post("/api/settlements/pay")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
-        }
-
-        @Test
-        @DisplayName("미래 월 pay 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
-        void pay_returns_409_when_target_month_is_future() throws Exception {
-            YearMonth future = YearMonth.now(ZoneId.of("Asia/Seoul")).plusMonths(1);
-            String body = """
-                    {"creatorId":1,"yearMonth":"%s","paidAt":"2026-01-01T10:00:00"}
-                    """.formatted(future.toString());
-
-            mockMvc.perform(post("/api/settlements/pay")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(body))
-                    .andExpect(status().isConflict())
-                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
         }
 
         private long saveCreator(String name) {

@@ -49,6 +49,7 @@ public class SettlementServiceImpl implements SettlementService {
     private final SettlementAmountCalculator settlementAmountCalculator;
     private final FeePolicyService feePolicyService;
     private final SettlementExcelWriter settlementExcelWriter;
+    private final SettlementMonthClosurePolicy monthClosurePolicy;
 
     public SettlementServiceImpl(
             SettlementRepository settlementRepository,
@@ -57,7 +58,8 @@ public class SettlementServiceImpl implements SettlementService {
             MonthlySettlementCalculator monthlySettlementCalculator,
             SettlementAmountCalculator settlementAmountCalculator,
             FeePolicyService feePolicyService,
-            SettlementExcelWriter settlementExcelWriter
+            SettlementExcelWriter settlementExcelWriter,
+            SettlementMonthClosurePolicy monthClosurePolicy
     ) {
         this.settlementRepository = settlementRepository;
         this.salesRepository = salesRepository;
@@ -66,26 +68,28 @@ public class SettlementServiceImpl implements SettlementService {
         this.settlementAmountCalculator = settlementAmountCalculator;
         this.feePolicyService = feePolicyService;
         this.settlementExcelWriter = settlementExcelWriter;
+        this.monthClosurePolicy = monthClosurePolicy;
     }
 
     @Override
     public MonthlySettlementView getMonthlySettlement(MonthlySettlementQuery query) {
         CreatorId creatorId = CreatorId.of(query.creatorId());
-        YearMonth ym = query.yearMonth();
+        YearMonth requestedYearMonth = query.yearMonth();
         Settlement settlement = settlementRepository
-                .findByCreatorIdAndYearMonth(creatorId, ym)
-                .orElseGet(() -> calculatePending(creatorId, ym));
+                .findByCreatorIdAndYearMonth(creatorId, requestedYearMonth)
+                .orElseGet(() -> calculatePending(creatorId, requestedYearMonth));
         return MonthlySettlementView.from(settlement);
     }
 
     @Override
     @Transactional
     public void confirm(ConfirmSettlementCommand command) {
+        monthClosurePolicy.verifyMonthClosed(command.yearMonth());
         CreatorId creatorId = CreatorId.of(command.creatorId());
-        YearMonth ym = command.yearMonth();
+        YearMonth requestedYearMonth = command.yearMonth();
         Settlement settlement = settlementRepository
-                .findByCreatorIdAndYearMonth(creatorId, ym)
-                .orElseGet(() -> calculatePending(creatorId, ym));
+                .findByCreatorIdAndYearMonth(creatorId, requestedYearMonth)
+                .orElseGet(() -> calculatePending(creatorId, requestedYearMonth));
         settlement.confirm(OccurredAt.of(command.confirmedAt()));
         settlementRepository.save(settlement);
     }
@@ -93,6 +97,7 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     public void pay(PaySettlementCommand command) {
+        monthClosurePolicy.verifyMonthClosed(command.yearMonth());
         Settlement settlement = loadOrThrow(CreatorId.of(command.creatorId()), command.yearMonth());
         settlement.pay(OccurredAt.of(command.paidAt()));
         settlementRepository.save(settlement);
@@ -101,13 +106,13 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     public SettlementRangeView getSettlementsInRange(SettlementRangeQuery query) {
         List<CreatorId> allCreatorIds = creatorRepository.findAllCreatorIds();
-        LocalDateTime fromDT = query.from().atStartOfDay();
-        LocalDateTime toExclusiveDT = query.to().plusDays(1).atStartOfDay();
+        LocalDateTime fromDate = query.from().atStartOfDay();
+        LocalDateTime toExclusiveDate = query.to().plusDays(1).atStartOfDay();
 
         List<MonthlySalesAggregate> salesAggregates =
-                salesRepository.findMonthlySalesAggregates(fromDT, toExclusiveDT);
+                salesRepository.findMonthlySalesAggregates(fromDate, toExclusiveDate);
         List<MonthlyCancellationAggregate> cancellationAggregates =
-                salesRepository.findMonthlyCancellationAggregates(fromDT, toExclusiveDT);
+                salesRepository.findMonthlyCancellationAggregates(fromDate, toExclusiveDate);
 
         Map<CreatorId, Map<YearMonth, BigDecimal>> salesByCreatorMonth = toCreatorMonthMap(
                 salesAggregates, MonthlySalesAggregate::creatorId, MonthlySalesAggregate::yearMonth,

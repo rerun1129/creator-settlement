@@ -59,6 +59,7 @@ class SettlementServiceMonthlyQueryTest {
         feePolicyService = new FeePolicyServiceImpl(feePolicyRepository);
         feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
         SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
+        SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
         service = new SettlementServiceImpl(
                 settlementRepository,
                 salesRepository,
@@ -66,7 +67,8 @@ class SettlementServiceMonthlyQueryTest {
                 new MonthlySettlementCalculator(),
                 new SettlementAmountCalculator(),
                 feePolicyService,
-                settlementExcelWriter
+                settlementExcelWriter,
+                monthClosurePolicy
         );
     }
 

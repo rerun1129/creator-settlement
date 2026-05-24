@@ -2,7 +2,6 @@ package com.creatorsettlement.presentation.settlement;
 
 import com.creatorsettlement.application.settlement.SettlementService;
 import com.creatorsettlement.application.settlement.dto.SettlementExcelDownload;
-import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.presentation.settlement.dto.ConfirmSettlementRequest;
 import com.creatorsettlement.presentation.settlement.dto.GetMonthlySettlementRequest;
 import com.creatorsettlement.presentation.settlement.dto.GetSettlementRangeRequest;
@@ -20,14 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.YearMonth;
-import java.time.ZoneId;
-
 @RestController
 @RequestMapping("/api/settlements")
 public class SettlementController {
-
-    private static final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
 
     private final SettlementService settlementService;
 
@@ -61,22 +55,13 @@ public class SettlementController {
 
     @PostMapping("/confirm")
     public ResponseEntity<Void> confirm(@Valid @RequestBody ConfirmSettlementRequest request) {
-        guardMonthClosed(request.yearMonth());
         settlementService.confirm(request.toCommand());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/pay")
     public ResponseEntity<Void> pay(@Valid @RequestBody PaySettlementRequest request) {
-        guardMonthClosed(request.yearMonth());
         settlementService.pay(request.toCommand());
         return ResponseEntity.noContent().build();
-    }
-
-    private void guardMonthClosed(YearMonth yearMonth) {
-        YearMonth current = YearMonth.now(KST_ZONE);
-        if (!yearMonth.isBefore(current)) {
-            throw new IllegalArgumentException(DomainErrorMessage.SETTLEMENT_MONTH_IN_PROGRESS.message());
-        }
     }
 }

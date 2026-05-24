@@ -5,6 +5,7 @@ import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
 import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.PaySettlementCommand;
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
@@ -35,6 +36,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -64,6 +66,7 @@ class SettlementServiceLifecycleTest {
             feePolicyService = new FeePolicyServiceImpl(feePolicyRepository);
             feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
             SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
+            SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
             service = new SettlementServiceImpl(
                     settlementRepository,
                     salesRepository,
@@ -71,7 +74,8 @@ class SettlementServiceLifecycleTest {
                     new MonthlySettlementCalculator(),
                     new SettlementAmountCalculator(),
                     feePolicyService,
-                    settlementExcelWriter
+                    settlementExcelWriter,
+                    monthClosurePolicy
             );
         }
 
@@ -156,6 +160,34 @@ class SettlementServiceLifecycleTest {
                     .hasMessage("이미 지급된 정산입니다");
         }
 
+        @Test
+        @DisplayName("현재 KST 월을 confirm 호출 시 SETTLEMENT_MONTH_IN_PROGRESS 예외가 발생한다")
+        void confirm_throws_MONTH_IN_PROGRESS_when_target_is_current_kst_month() {
+            // Given
+            CreatorId creatorId = CreatorId.of(70L);
+            YearMonth current = YearMonth.now(ZoneId.of("Asia/Seoul"));
+            LocalDateTime confirmedAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+
+            // When & Then
+            assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), current, confirmedAt)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(DomainErrorMessage.SETTLEMENT_MONTH_IN_PROGRESS.message());
+        }
+
+        @Test
+        @DisplayName("미래 월을 confirm 호출 시 SETTLEMENT_MONTH_IN_PROGRESS 예외가 발생한다")
+        void confirm_throws_MONTH_IN_PROGRESS_when_target_is_future() {
+            // Given
+            CreatorId creatorId = CreatorId.of(71L);
+            YearMonth future = YearMonth.now(ZoneId.of("Asia/Seoul")).plusMonths(1);
+            LocalDateTime confirmedAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+
+            // When & Then
+            assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), future, confirmedAt)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(DomainErrorMessage.SETTLEMENT_MONTH_IN_PROGRESS.message());
+        }
+
         private Settlement pendingFixture(CreatorId creatorId, YearMonth yearMonth) {
             return Settlement.pendingSnapshot(
                     creatorId, yearMonth,
@@ -221,6 +253,7 @@ class SettlementServiceLifecycleTest {
             feePolicyService = new FeePolicyServiceImpl(feePolicyRepository);
             feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
             SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
+            SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
             service = new SettlementServiceImpl(
                     settlementRepository,
                     salesRepository,
@@ -228,7 +261,8 @@ class SettlementServiceLifecycleTest {
                     new MonthlySettlementCalculator(),
                     new SettlementAmountCalculator(),
                     feePolicyService,
-                    settlementExcelWriter
+                    settlementExcelWriter,
+                    monthClosurePolicy
             );
         }
 
@@ -292,6 +326,34 @@ class SettlementServiceLifecycleTest {
             assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("이미 지급된 정산입니다");
+        }
+
+        @Test
+        @DisplayName("현재 KST 월을 pay 호출 시 SETTLEMENT_MONTH_IN_PROGRESS 예외가 발생한다")
+        void pay_throws_MONTH_IN_PROGRESS_when_target_is_current_kst_month() {
+            // Given
+            CreatorId creatorId = CreatorId.of(72L);
+            YearMonth current = YearMonth.now(ZoneId.of("Asia/Seoul"));
+            LocalDateTime paidAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+
+            // When & Then
+            assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), current, paidAt)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(DomainErrorMessage.SETTLEMENT_MONTH_IN_PROGRESS.message());
+        }
+
+        @Test
+        @DisplayName("미래 월을 pay 호출 시 SETTLEMENT_MONTH_IN_PROGRESS 예외가 발생한다")
+        void pay_throws_MONTH_IN_PROGRESS_when_target_is_future() {
+            // Given
+            CreatorId creatorId = CreatorId.of(73L);
+            YearMonth future = YearMonth.now(ZoneId.of("Asia/Seoul")).plusMonths(1);
+            LocalDateTime paidAt = LocalDateTime.of(2026, 1, 1, 10, 0);
+
+            // When & Then
+            assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), future, paidAt)))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(DomainErrorMessage.SETTLEMENT_MONTH_IN_PROGRESS.message());
         }
 
         private Settlement pendingFixture(CreatorId creatorId, YearMonth yearMonth) {
