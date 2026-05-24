@@ -141,10 +141,10 @@ class SettlementServiceMonthlyQueryTest {
     }
 
     @Test
-    @DisplayName("정산 대상 월의 effective 정책 rate가 platformFee 산출에 적용된다")
+    @DisplayName("정산 대상 월에 적용 가능한 정책(전월 이전 등록) rate가 platformFee 산출에 적용된다")
     void applies_effective_policy_rate_when_policy_registered_for_target_month() {
         // Given
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 8, 1)));
+        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 7, 1)));
 
         CreatorId creatorId = CreatorId.of(99L);
         YearMonth yearMonth = YearMonth.of(2026, 8);

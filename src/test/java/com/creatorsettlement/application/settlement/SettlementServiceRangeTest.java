@@ -259,7 +259,7 @@ class SettlementServiceRangeTest {
     @DisplayName("다중 월 range에서 각 월의 effective 정책 rate가 적용된다")
     void getSettlementsInRange_appliesPerMonthPolicyRate_whenMultiMonthRange() {
         // given
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 6, 1)));
+        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 5, 1)));
 
         CreatorId creatorId = CreatorId.of(99L);
         creatorRepository.saveCreator(Creator.of(creatorId, "크리에이터99"));

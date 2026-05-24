@@ -61,16 +61,16 @@ class FeePolicyServiceImplTest {
         }
 
         @Test
-        @DisplayName("기준일과 effectiveFrom이 동일하면 해당 정책 포함")
-        void findEffectiveRate_returnsExactDatePolicy_whenReferenceMatchesEffectiveFrom() {
+        @DisplayName("기준일이 effectiveFrom과 같은 월이면 정책 미적용(다음 달부터 적용)")
+        void findEffectiveRate_doesNotApplyPolicy_whenReferenceIsSameMonthAsEffectiveFrom() {
             // Given
-            service.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2026, 7, 1)));
+            service.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 7, 1)));
 
             // When
-            FeeRate result = service.findEffectiveRate(LocalDate.of(2026, 7, 1));
+            FeeRate result = service.findEffectiveRate(LocalDate.of(2026, 7, 31));
 
             // Then
-            assertThat(result.value()).isEqualByComparingTo(new BigDecimal("0.2"));
+            assertThat(result.value()).isEqualByComparingTo(FeeRate.defaultRate().value());
         }
 
         @Test
@@ -85,6 +85,22 @@ class FeePolicyServiceImplTest {
 
             // Then
             assertThat(rate.value()).isEqualByComparingTo(new BigDecimal("0.18"));
+        }
+
+        @Test
+        @DisplayName("같은 월 중간에 등록된 후속 정책은 본 월에 미반영되고 다음 달 1일부터 적용된다")
+        void findEffectiveRate_appliesUpdatedPolicy_fromNextMonth_whenRegisteredMidMonth() {
+            // Given
+            service.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 5, 1)));
+            service.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2020, 6, 15)));
+
+            // When
+            FeeRate currentMonth = service.findEffectiveRate(LocalDate.of(2020, 6, 20));
+            FeeRate nextMonth = service.findEffectiveRate(LocalDate.of(2020, 7, 1));
+
+            // Then
+            assertThat(currentMonth.value()).isEqualByComparingTo(new BigDecimal("0.2"));
+            assertThat(nextMonth.value()).isEqualByComparingTo(new BigDecimal("0.18"));
         }
     }
 

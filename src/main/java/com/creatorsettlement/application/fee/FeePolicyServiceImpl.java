@@ -23,7 +23,7 @@ public class FeePolicyServiceImpl implements FeePolicyService {
     @Override
     public FeeRate findEffectiveRate(LocalDate referenceDate) {
         LocalDate firstDayOfMonth = referenceDate.withDayOfMonth(1);
-        return repository.findEffectiveAt(firstDayOfMonth)
+        return repository.findEffectiveAt(firstDayOfMonth.minusDays(1))
                 .map(FeePolicy::rate)
                 .orElse(FeeRate.defaultRate());
     }
