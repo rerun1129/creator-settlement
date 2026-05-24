@@ -16,6 +16,7 @@ public record GetSettlementRangeRequest(
     }
 
     @AssertTrue
+    @SuppressWarnings("unused")
     public boolean isFromNotAfterTo() {
         return from == null || to == null || !from.isAfter(to);
     }
