@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -57,10 +59,10 @@ class SettlementLifecycleControllerE2ETest {
             // given
             long creatorId = saveCreator("크리에이터 A");
             long courseId = saveCourse(creatorId, "강의 A");
-            saveSale(courseId, 10L, "50000", LocalDateTime.of(2026, 5, 10, 12, 0));
+            saveSale(courseId, 10L, "50000", LocalDateTime.of(2020, 1, 10, 12, 0));
 
             String body = """
-                    {"creatorId":%d,"yearMonth":"2026-05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","confirmedAt":"2020-02-01T10:00:00"}
                     """.formatted(creatorId);
 
             // when
@@ -72,10 +74,10 @@ class SettlementLifecycleControllerE2ETest {
             // then
             mockMvc.perform(get("/api/settlements")
                             .param("creatorId", String.valueOf(creatorId))
-                            .param("yearMonth", "2026-05"))
+                            .param("yearMonth", "2020-01"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("CONFIRMED"))
-                    .andExpect(jsonPath("$.confirmedAt").value("2026-06-01T10:00:00"))
+                    .andExpect(jsonPath("$.confirmedAt").value("2020-02-01T10:00:00"))
                     .andExpect(jsonPath("$.totalSales").value(50000));
         }
 
@@ -86,7 +88,7 @@ class SettlementLifecycleControllerE2ETest {
             long creatorId = saveCreator("크리에이터 B");
             saveCourse(creatorId, "강의 B");
             String body = """
-                    {"creatorId":%d,"yearMonth":"2026-05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","confirmedAt":"2020-02-01T10:00:00"}
                     """.formatted(creatorId);
 
             mockMvc.perform(post("/api/settlements/confirm")
@@ -109,10 +111,10 @@ class SettlementLifecycleControllerE2ETest {
             long creatorId = saveCreator("크리에이터 C");
             saveCourse(creatorId, "강의 C");
             String confirmBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","confirmedAt":"2020-02-01T10:00:00"}
                     """.formatted(creatorId);
             String payBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","paidAt":"2026-06-02T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","paidAt":"2020-02-02T10:00:00"}
                     """.formatted(creatorId);
 
             mockMvc.perform(post("/api/settlements/confirm")
@@ -137,7 +139,7 @@ class SettlementLifecycleControllerE2ETest {
         void confirm_returns_400_VALIDATION_when_confirmedAt_missing() throws Exception {
             // given
             String body = """
-                    {"creatorId":1,"yearMonth":"2026-05"}
+                    {"creatorId":1,"yearMonth":"2020-01"}
                     """;
 
             // when & then
@@ -153,7 +155,7 @@ class SettlementLifecycleControllerE2ETest {
         void confirm_returns_400_VALIDATION_when_yearMonth_format_invalid() throws Exception {
             // given
             String body = """
-                    {"creatorId":1,"yearMonth":"2026/05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":1,"yearMonth":"2020/01","confirmedAt":"2020-02-01T10:00:00"}
                     """;
 
             // when & then
@@ -162,6 +164,40 @@ class SettlementLifecycleControllerE2ETest {
                             .content(body))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("VALIDATION"));
+        }
+
+        @Test
+        @DisplayName("현재 KST 월 confirm 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
+        void confirm_returns_409_when_target_month_is_current_kst_month() throws Exception {
+            long creatorId = saveCreator("크리에이터 가드 현재");
+            saveCourse(creatorId, "강의 가드 현재");
+            YearMonth current = YearMonth.now(ZoneId.of("Asia/Seoul"));
+            String body = """
+                    {"creatorId":%d,"yearMonth":"%s","confirmedAt":"2026-01-01T10:00:00"}
+                    """.formatted(creatorId, current.toString());
+
+            mockMvc.perform(post("/api/settlements/confirm")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
+        }
+
+        @Test
+        @DisplayName("미래 월 confirm 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
+        void confirm_returns_409_when_target_month_is_future() throws Exception {
+            long creatorId = saveCreator("크리에이터 가드 미래");
+            saveCourse(creatorId, "강의 가드 미래");
+            YearMonth future = YearMonth.now(ZoneId.of("Asia/Seoul")).plusMonths(1);
+            String body = """
+                    {"creatorId":%d,"yearMonth":"%s","confirmedAt":"2026-01-01T10:00:00"}
+                    """.formatted(creatorId, future.toString());
+
+            mockMvc.perform(post("/api/settlements/confirm")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
         }
 
         private long saveCreator(String name) {
@@ -208,10 +244,10 @@ class SettlementLifecycleControllerE2ETest {
             long creatorId = saveCreator("크리에이터 D");
             saveCourse(creatorId, "강의 D");
             String confirmBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","confirmedAt":"2020-02-01T10:00:00"}
                     """.formatted(creatorId);
             String payBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","paidAt":"2026-06-02T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","paidAt":"2020-02-02T10:00:00"}
                     """.formatted(creatorId);
 
             mockMvc.perform(post("/api/settlements/confirm")
@@ -228,7 +264,7 @@ class SettlementLifecycleControllerE2ETest {
             // then
             mockMvc.perform(get("/api/settlements")
                             .param("creatorId", String.valueOf(creatorId))
-                            .param("yearMonth", "2026-05"))
+                            .param("yearMonth", "2020-01"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("PAID"));
         }
@@ -238,7 +274,7 @@ class SettlementLifecycleControllerE2ETest {
         void pay_returns_404_when_not_stored() throws Exception {
             // given
             String body = """
-                    {"creatorId":999,"yearMonth":"2026-05","paidAt":"2026-06-02T10:00:00"}
+                    {"creatorId":999,"yearMonth":"2020-01","paidAt":"2020-02-02T10:00:00"}
                     """;
 
             // when & then
@@ -256,10 +292,10 @@ class SettlementLifecycleControllerE2ETest {
             long creatorId = saveCreator("크리에이터 E");
             saveCourse(creatorId, "강의 E");
             String confirmBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","confirmedAt":"2020-02-01T10:00:00"}
                     """.formatted(creatorId);
             String payBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","paidAt":"2026-06-02T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","paidAt":"2020-02-02T10:00:00"}
                     """.formatted(creatorId);
 
             mockMvc.perform(post("/api/settlements/confirm")
@@ -284,7 +320,7 @@ class SettlementLifecycleControllerE2ETest {
         void pay_returns_400_VALIDATION_when_paidAt_missing() throws Exception {
             // given
             String body = """
-                    {"creatorId":1,"yearMonth":"2026-05"}
+                    {"creatorId":1,"yearMonth":"2020-01"}
                     """;
 
             // when & then
@@ -293,6 +329,36 @@ class SettlementLifecycleControllerE2ETest {
                             .content(body))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.code").value("VALIDATION"));
+        }
+
+        @Test
+        @DisplayName("현재 KST 월 pay 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
+        void pay_returns_409_when_target_month_is_current_kst_month() throws Exception {
+            YearMonth current = YearMonth.now(ZoneId.of("Asia/Seoul"));
+            String body = """
+                    {"creatorId":1,"yearMonth":"%s","paidAt":"2026-01-01T10:00:00"}
+                    """.formatted(current.toString());
+
+            mockMvc.perform(post("/api/settlements/pay")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
+        }
+
+        @Test
+        @DisplayName("미래 월 pay 호출 시 409 SETTLEMENT_MONTH_IN_PROGRESS")
+        void pay_returns_409_when_target_month_is_future() throws Exception {
+            YearMonth future = YearMonth.now(ZoneId.of("Asia/Seoul")).plusMonths(1);
+            String body = """
+                    {"creatorId":1,"yearMonth":"%s","paidAt":"2026-01-01T10:00:00"}
+                    """.formatted(future.toString());
+
+            mockMvc.perform(post("/api/settlements/pay")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("SETTLEMENT_MONTH_IN_PROGRESS"));
         }
 
         private long saveCreator(String name) {
@@ -330,10 +396,10 @@ class SettlementLifecycleControllerE2ETest {
             long creatorId = saveCreator("크리에이터 F");
             saveCourse(creatorId, "강의 F");
             String confirmBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","confirmedAt":"2026-06-01T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","confirmedAt":"2020-02-01T10:00:00"}
                     """.formatted(creatorId);
             String payBody = """
-                    {"creatorId":%d,"yearMonth":"2026-05","paidAt":"2026-06-02T10:00:00"}
+                    {"creatorId":%d,"yearMonth":"2020-01","paidAt":"2020-02-02T10:00:00"}
                     """.formatted(creatorId);
 
             mockMvc.perform(post("/api/settlements/confirm")
@@ -348,9 +414,9 @@ class SettlementLifecycleControllerE2ETest {
             // when & then
             mockMvc.perform(get("/api/settlements")
                             .param("creatorId", String.valueOf(creatorId))
-                            .param("yearMonth", "2026-05"))
+                            .param("yearMonth", "2020-01"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.paidAt").value("2026-06-02T10:00:00"));
+                    .andExpect(jsonPath("$.paidAt").value("2020-02-02T10:00:00"));
         }
 
         private long saveCreator(String name) {
