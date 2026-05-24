@@ -27,4 +27,20 @@ public interface SalesRecordJpaDataRepository extends JpaRepository<SalesRecordJ
     List<SalesRecordJpaEntity> findAllByIdIn(@Param("ids") Collection<Long> ids);
 
     List<SalesRecordJpaEntity> findByCourse_IdAndStudentId(Long courseId, Long studentId);
+
+    @Query("""
+        SELECT new com.creatorsettlement.infrastructure.persistence.sales.MonthlySalesAggregateRow(
+            s.course.creatorId,
+            YEAR(s.paidAt),
+            MONTH(s.paidAt),
+            SUM(s.paymentAmount)
+        )
+        FROM SalesRecordJpaEntity s
+        WHERE s.paidAt >= :from AND s.paidAt < :toExclusive
+        GROUP BY s.course.creatorId, YEAR(s.paidAt), MONTH(s.paidAt)
+    """)
+    List<MonthlySalesAggregateRow> aggregateMonthlySales(
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive
+    );
 }

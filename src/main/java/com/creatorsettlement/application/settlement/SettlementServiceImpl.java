@@ -17,8 +17,8 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.repository.creator.CreatorRepository;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
-import com.creatorsettlement.domain.repository.sales.dto.CancellationView;
-import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
+import com.creatorsettlement.domain.repository.sales.dto.MonthlyCancellationAggregate;
+import com.creatorsettlement.domain.repository.sales.dto.MonthlySalesAggregate;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
@@ -104,11 +104,17 @@ public class SettlementServiceImpl implements SettlementService {
         LocalDateTime fromDT = query.from().atStartOfDay();
         LocalDateTime toExclusiveDT = query.to().plusDays(1).atStartOfDay();
 
-        List<SalesRecordView> salesViews = salesRepository.findAllSalesView(fromDT, toExclusiveDT);
-        List<CancellationView> cancellationViews = salesRepository.findCancellationsByDateRange(fromDT, toExclusiveDT);
+        List<MonthlySalesAggregate> salesAggregates =
+                salesRepository.findMonthlySalesAggregates(fromDT, toExclusiveDT);
+        List<MonthlyCancellationAggregate> cancellationAggregates =
+                salesRepository.findMonthlyCancellationAggregates(fromDT, toExclusiveDT);
 
-        Map<CreatorId, Map<YearMonth, BigDecimal>> salesByCreatorMonth = groupSalesByCreatorMonth(salesViews);
-        Map<CreatorId, Map<YearMonth, BigDecimal>> refundByCreatorMonth = groupRefundsByCreatorMonth(cancellationViews);
+        Map<CreatorId, Map<YearMonth, BigDecimal>> salesByCreatorMonth = toCreatorMonthMap(
+                salesAggregates, MonthlySalesAggregate::creatorId, MonthlySalesAggregate::yearMonth,
+                agg -> agg.totalAmount().value());
+        Map<CreatorId, Map<YearMonth, BigDecimal>> refundByCreatorMonth = toCreatorMonthMap(
+                cancellationAggregates, MonthlyCancellationAggregate::creatorId, MonthlyCancellationAggregate::yearMonth,
+                agg -> agg.totalRefund().value());
 
         Map<YearMonth, FeeRate> rateCache = new HashMap<>();
         List<CreatorPayableView> responses = allCreatorIds.stream()
@@ -131,22 +137,15 @@ public class SettlementServiceImpl implements SettlementService {
         return settlementExcelWriter.write(getSettlementsInRange(query), query.from(), query.to());
     }
 
-    private Map<CreatorId, Map<YearMonth, BigDecimal>> groupSalesByCreatorMonth(List<SalesRecordView> salesViews) {
+    private static <T> Map<CreatorId, Map<YearMonth, BigDecimal>> toCreatorMonthMap(
+            List<T> items,
+            java.util.function.Function<T, CreatorId> creatorIdFn,
+            java.util.function.Function<T, YearMonth> yearMonthFn,
+            java.util.function.Function<T, BigDecimal> amountFn) {
         Map<CreatorId, Map<YearMonth, BigDecimal>> result = new HashMap<>();
-        for (SalesRecordView view : salesViews) {
-            YearMonth ym = YearMonth.from(view.record().getPaidAt().value().toLocalDate());
-            result.computeIfAbsent(view.creatorId(), k -> new HashMap<>())
-                    .merge(ym, view.record().getPaymentAmount().value(), BigDecimal::add);
-        }
-        return result;
-    }
-
-    private Map<CreatorId, Map<YearMonth, BigDecimal>> groupRefundsByCreatorMonth(List<CancellationView> cancellationViews) {
-        Map<CreatorId, Map<YearMonth, BigDecimal>> result = new HashMap<>();
-        for (CancellationView view : cancellationViews) {
-            YearMonth ym = YearMonth.from(view.record().getCancelledAt().value().toLocalDate());
-            result.computeIfAbsent(view.creatorId(), k -> new HashMap<>())
-                    .merge(ym, view.record().getRefundAmount().value(), BigDecimal::add);
+        for (T item : items) {
+            result.computeIfAbsent(creatorIdFn.apply(item), k -> new HashMap<>())
+                    .merge(yearMonthFn.apply(item), amountFn.apply(item), BigDecimal::add);
         }
         return result;
     }

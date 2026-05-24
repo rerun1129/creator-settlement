@@ -32,4 +32,21 @@ public interface CancellationJpaDataRepository extends JpaRepository<Cancellatio
         @Param("startInclusive") LocalDateTime startInclusive,
         @Param("endExclusive") LocalDateTime endExclusive
     );
+
+    @Query("""
+        SELECT new com.creatorsettlement.infrastructure.persistence.sales.MonthlyCancellationAggregateRow(
+            s.course.creatorId,
+            YEAR(cn.cancelledAt),
+            MONTH(cn.cancelledAt),
+            SUM(cn.refundAmount)
+        )
+        FROM CancellationRecordJpaEntity cn, SalesRecordJpaEntity s
+        WHERE cn.salesRecordId = s.id
+          AND cn.cancelledAt >= :from AND cn.cancelledAt < :toExclusive
+        GROUP BY s.course.creatorId, YEAR(cn.cancelledAt), MONTH(cn.cancelledAt)
+    """)
+    List<MonthlyCancellationAggregateRow> aggregateMonthlyCancellations(
+            @Param("from") LocalDateTime from,
+            @Param("toExclusive") LocalDateTime toExclusive
+    );
 }

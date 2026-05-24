@@ -8,7 +8,8 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
-import com.creatorsettlement.domain.repository.sales.dto.CancellationView;
+import com.creatorsettlement.domain.repository.sales.dto.MonthlyCancellationAggregate;
+import com.creatorsettlement.domain.repository.sales.dto.MonthlySalesAggregate;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
@@ -91,30 +92,6 @@ public class JpaSalesRepository implements SalesRepository {
     }
 
     @Override
-    public List<CancellationView> findCancellationsByDateRange(LocalDateTime from, LocalDateTime toExclusive) {
-        List<CancellationRecordJpaEntity> cancellations = cancellationDataRepository.findByCancelledAtBetween(from, toExclusive);
-        if (cancellations.isEmpty()) {
-            return List.of();
-        }
-
-        List<Long> salesIds = cancellations.stream().map(CancellationRecordJpaEntity::getSalesRecordId).distinct().toList();
-        List<SalesRecordJpaEntity> sales = salesDataRepository.findAllByIdIn(salesIds);
-        Map<Long, Long> creatorIdBySalesId = sales.stream()
-                .collect(Collectors.toMap(SalesRecordJpaEntity::getId, s -> s.getCourse().getCreatorId()));
-
-        return cancellations.stream()
-                .map(c -> {
-                    Long creatorIdValue = creatorIdBySalesId.get(c.getSalesRecordId());
-                    if (creatorIdValue == null) {
-                        return null;
-                    }
-                    return new CancellationView(SalesRecordMapper.toDomainCancellation(c), CreatorId.of(creatorIdValue));
-                })
-                .filter(view -> view != null)
-                .toList();
-    }
-
-    @Override
     public List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
         return salesDataRepository.findByCourse_IdAndStudentId(courseId.value(), studentId.value())
                 .stream()
@@ -144,5 +121,25 @@ public class JpaSalesRepository implements SalesRepository {
                 .map(CancellationRecordJpaEntity::getRefundAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         return new CancellationSummary(Money.of(total), cancellations.size());
+    }
+
+    @Override
+    public List<MonthlySalesAggregate> findMonthlySalesAggregates(LocalDateTime from, LocalDateTime toExclusive) {
+        return salesDataRepository.aggregateMonthlySales(from, toExclusive).stream()
+                .map(row -> new MonthlySalesAggregate(
+                        CreatorId.of(row.creatorId()),
+                        YearMonth.of(row.year(), row.month()),
+                        Money.of(row.totalAmount())))
+                .toList();
+    }
+
+    @Override
+    public List<MonthlyCancellationAggregate> findMonthlyCancellationAggregates(LocalDateTime from, LocalDateTime toExclusive) {
+        return cancellationDataRepository.aggregateMonthlyCancellations(from, toExclusive).stream()
+                .map(row -> new MonthlyCancellationAggregate(
+                        CreatorId.of(row.creatorId()),
+                        YearMonth.of(row.year(), row.month()),
+                        Money.of(row.totalRefund())))
+                .toList();
     }
 }

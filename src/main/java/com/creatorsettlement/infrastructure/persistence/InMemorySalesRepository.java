@@ -8,7 +8,8 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
-import com.creatorsettlement.domain.repository.sales.dto.CancellationView;
+import com.creatorsettlement.domain.repository.sales.dto.MonthlyCancellationAggregate;
+import com.creatorsettlement.domain.repository.sales.dto.MonthlySalesAggregate;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordView;
 import com.creatorsettlement.domain.repository.sales.dto.SalesRecordWithId;
@@ -135,40 +136,6 @@ public class InMemorySalesRepository implements SalesRepository {
     }
 
     @Override
-    public List<CancellationView> findCancellationsByDateRange(LocalDateTime from, LocalDateTime toExclusive) {
-        List<CancellationRecord> filtered = cancellations.stream()
-                .filter(c -> {
-                    LocalDateTime cancelledAt = c.getCancelledAt().value();
-                    return !cancelledAt.isBefore(from) && cancelledAt.isBefore(toExclusive);
-                })
-                .toList();
-        if (filtered.isEmpty()) {
-            return List.of();
-        }
-        List<CourseId> courseIds = filtered.stream()
-                .map(c -> salesById.get(c.getSalesRecordId()))
-                .filter(sale -> sale != null)
-                .map(SalesRecord::getCourseId)
-                .distinct()
-                .toList();
-        Map<CourseId, CreatorId> creatorIdByCourseId = courseRepository.findCreatorIdsByCourseIds(courseIds);
-        return filtered.stream()
-                .map(c -> {
-                    SalesRecord sale = salesById.get(c.getSalesRecordId());
-                    if (sale == null) {
-                        return null;
-                    }
-                    CreatorId creatorId = creatorIdByCourseId.get(sale.getCourseId());
-                    if (creatorId == null) {
-                        return null;
-                    }
-                    return new CancellationView(c, creatorId);
-                })
-                .filter(view -> view != null)
-                .toList();
-    }
-
-    @Override
     public List<SalesRecordWithId> findByCourseIdAndStudentId(CourseId courseId, StudentId studentId) {
         return salesById.entrySet().stream()
                 .filter(e -> e.getValue().getCourseId().equals(courseId) && e.getValue().getStudentId().equals(studentId))
@@ -213,5 +180,71 @@ public class InMemorySalesRepository implements SalesRepository {
 
     public List<SalesRecord> findAll() {
         return new ArrayList<>(salesById.values());
+    }
+
+    @Override
+    public List<MonthlySalesAggregate> findMonthlySalesAggregates(LocalDateTime from, LocalDateTime toExclusive) {
+        List<SalesRecord> filtered = salesById.values().stream()
+                .filter(sale -> {
+                    LocalDateTime paidAt = sale.getPaidAt().value();
+                    return !paidAt.isBefore(from) && paidAt.isBefore(toExclusive);
+                })
+                .toList();
+        if (filtered.isEmpty()) {
+            return List.of();
+        }
+        List<CourseId> courseIds = filtered.stream().map(SalesRecord::getCourseId).distinct().toList();
+        Map<CourseId, CreatorId> creatorIdByCourseId = courseRepository.findCreatorIdsByCourseIds(courseIds);
+        Map<AggregateKey, BigDecimal> totals = new java.util.LinkedHashMap<>();
+        for (SalesRecord sale : filtered) {
+            CreatorId creatorId = creatorIdByCourseId.get(sale.getCourseId());
+            if (creatorId == null) {
+                continue;
+            }
+            AggregateKey key = new AggregateKey(creatorId, YearMonth.from(sale.getPaidAt().value()));
+            totals.merge(key, sale.getPaymentAmount().value(), BigDecimal::add);
+        }
+        return totals.entrySet().stream()
+                .map(e -> new MonthlySalesAggregate(e.getKey().creatorId(), e.getKey().yearMonth(), Money.of(e.getValue())))
+                .toList();
+    }
+
+    @Override
+    public List<MonthlyCancellationAggregate> findMonthlyCancellationAggregates(LocalDateTime from, LocalDateTime toExclusive) {
+        List<CancellationRecord> filtered = cancellations.stream()
+                .filter(c -> {
+                    LocalDateTime cancelledAt = c.getCancelledAt().value();
+                    return !cancelledAt.isBefore(from) && cancelledAt.isBefore(toExclusive);
+                })
+                .toList();
+        if (filtered.isEmpty()) {
+            return List.of();
+        }
+        List<CourseId> courseIds = filtered.stream()
+                .map(c -> salesById.get(c.getSalesRecordId()))
+                .filter(sale -> sale != null)
+                .map(SalesRecord::getCourseId)
+                .distinct()
+                .toList();
+        Map<CourseId, CreatorId> creatorIdByCourseId = courseRepository.findCreatorIdsByCourseIds(courseIds);
+        Map<AggregateKey, BigDecimal> totals = new java.util.LinkedHashMap<>();
+        for (CancellationRecord cancellation : filtered) {
+            SalesRecord sale = salesById.get(cancellation.getSalesRecordId());
+            if (sale == null) {
+                continue;
+            }
+            CreatorId creatorId = creatorIdByCourseId.get(sale.getCourseId());
+            if (creatorId == null) {
+                continue;
+            }
+            AggregateKey key = new AggregateKey(creatorId, YearMonth.from(cancellation.getCancelledAt().value()));
+            totals.merge(key, cancellation.getRefundAmount().value(), BigDecimal::add);
+        }
+        return totals.entrySet().stream()
+                .map(e -> new MonthlyCancellationAggregate(e.getKey().creatorId(), e.getKey().yearMonth(), Money.of(e.getValue())))
+                .toList();
+    }
+
+    private record AggregateKey(CreatorId creatorId, YearMonth yearMonth) {
     }
 }
