@@ -3,6 +3,7 @@ package com.creatorsettlement.application.settlement;
 import com.creatorsettlement.application.fee.FeePolicyService;
 import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
 import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
+import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementView;
 import com.creatorsettlement.domain.model.course.Course;
@@ -206,6 +207,51 @@ class SettlementServiceMonthlyQueryTest {
 
         assertThat(mayResponse.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
         assertThat(mayResponse.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("40000"));
+    }
+
+    @Test
+    @DisplayName("CONFIRMED 정산 이후 도착한 환불은 본 정산 불변, 다음 달 PENDING에 음수 반영")
+    void late_cancellation_after_confirmed_settlement_keeps_snapshot_and_reflects_in_next_month() {
+        // Given
+        CreatorId creatorId = CreatorId.of(50L);
+        CourseId courseId = CourseId.of(500L);
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의LATE"));
+
+        SalesRecord sale = SalesRecord.of(
+                courseId, StudentId.of(50L),
+                Money.of(new BigDecimal("50000")),
+                OccurredAt.of(LocalDateTime.of(2020, 1, 15, 10, 0))
+        );
+        salesRepository.saveSalesRecord(sale);
+
+        service.confirm(new ConfirmSettlementCommand(
+                50L, YearMonth.of(2020, 1),
+                LocalDateTime.of(2020, 2, 15, 10, 0)
+        ));
+
+        SalesRecordId salesRecordId = SalesRecordId.of(1L);
+        CancellationRecord lateCancellation = CancellationRecord.of(
+                salesRecordId,
+                Money.of(new BigDecimal("50000")),
+                OccurredAt.of(LocalDateTime.of(2020, 2, 20, 10, 0))
+        );
+        salesRepository.saveCancellationRecord(lateCancellation);
+
+        // When
+        MonthlySettlementView janResponse = service.getMonthlySettlement(
+                new MonthlySettlementQuery(50L, YearMonth.of(2020, 1)));
+        MonthlySettlementView febResponse = service.getMonthlySettlement(
+                new MonthlySettlementQuery(50L, YearMonth.of(2020, 2)));
+
+        // Then
+        assertThat(janResponse.status()).isEqualTo(SettlementStatus.CONFIRMED);
+        assertThat(janResponse.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("50000"));
+        assertThat(janResponse.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
+
+        assertThat(febResponse.status()).isEqualTo(SettlementStatus.PENDING);
+        assertThat(febResponse.totalSales()).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
+        assertThat(febResponse.totalRefund()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("50000"));
+        assertThat(febResponse.netSales()).usingComparator(BigDecimal::compareTo).isNegative();
     }
 
     @Test
