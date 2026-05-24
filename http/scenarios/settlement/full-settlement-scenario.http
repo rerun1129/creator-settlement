@@ -1,0 +1,81 @@
+@host = http://localhost:9090
+
+# ============================================================
+# 정산 통합 시나리오 검증 (Settlement Full Scenario)
+#
+# 검증 대상:
+#   [1] creator-1 (creatorId=1001) 2025-03 정산 합산
+#       — 총 판매 260,000 / 환불 110,000 / 순 판매 150,000 / 수수료 30,000 / 정산 예정 120,000
+#   [2] 부분 환불 (cancel-2 = sale-4의 30,000 부분) — [1] 응답의 totalRefund 110,000에 포함되어 검증
+#   [3] 월 경계: sale-5 (creator-2, 1/31 KST 결제) / cancel-3 (creator-2, 2/1 취소)
+#       — 1월 결제는 1월 정산에, 2월 취소는 2월 정산에 반영
+#   [4] 빈 월: creator-3 (creatorId=1003) 2025-03 → 0원 + PENDING 200 응답
+#
+# 사용법:
+#   1) full-settlement-scenario.seed.sql 선실행
+#      (creator 1001~1003, course 10001~10004, sales_record 7건, cancellation_record 3건 일괄 적재)
+#   2) 아래 GET 6건 실행, 응답 본문이 각 시나리오 기댓값과 일치하는지 사용자 확인
+#
+# 전제:
+#   - 서버 9090 부팅 상태
+#   - MySQL 기동 + 시드(seed.sql) 적용 완료
+#   - fee_policy default 0.2000 (DDL 기본값) 적용 → 모든 정산 feeRate = 0.20
+#
+# 격리 범위 (충돌 방지):
+#   creator_id IN (1001, 1002, 1003)
+#   course_id  IN (10001, 10002, 10003, 10004)
+#   student_id BETWEEN 300001 AND 300007
+#
+# DB cleanup (재실행 시 seed.sql이 격리 범위만 정리하므로 별도 cleanup 불필요)
+# ============================================================
+
+
+### [시나리오 1 & 2] creator-1 2025-03 정산 (사용자 표 핵심 케이스)
+###   기댓값 (200 OK):
+###     creatorId         : 1001
+###     yearMonth         : "2025-03"
+###     status            : "PENDING"
+###     totalSales        : 260000  (sale-1 50,000 + sale-2 50,000 + sale-3 80,000 + sale-4 80,000)
+###     totalRefund       : 110000  (cancel-1 80,000 + cancel-2 30,000)
+###     netSales          : 150000
+###     feeRate           : 0.20
+###     platformFee       : 30000
+###     expectedPayout    : 120000
+###     salesCount        : 4
+###     cancellationCount : 2
+###     confirmedAt       : null
+###     paidAt            : null
+###   ※ [시나리오 2 부분 환불 검증] cancel-2 30,000(< sale-4 80,000)이 totalRefund 110,000에 합산되어 검증됨
+GET {{host}}/api/settlements?creatorId=1001&yearMonth=2025-03
+
+
+### [시나리오 3-a] creator-2 2025-01 정산 (월 경계: sale-5 1월 결제만 잡힘)
+###   기댓값 (200 OK):
+###     totalSales 60000 / totalRefund 0 / netSales 60000
+###     feeRate 0.20 / platformFee 12000 / expectedPayout 48000
+###     salesCount 1 / cancellationCount 0 / status PENDING
+GET {{host}}/api/settlements?creatorId=1002&yearMonth=2025-01
+
+
+### [시나리오 3-b] creator-2 2025-02 정산 (월 경계: cancel-3 2월 취소만 잡힘 → 음수)
+###   기댓값 (200 OK, 음수 net 허용):
+###     totalSales 0 / totalRefund 60000 / netSales -60000
+###     feeRate 0.20 / platformFee 0 (net<0 시 fee=0 정책) / expectedPayout -60000
+###     salesCount 0 / cancellationCount 1 / status PENDING
+GET {{host}}/api/settlements?creatorId=1002&yearMonth=2025-02
+
+
+### [시나리오 3-c] creator-2 2025-03 정산 (sale-6만 잡힘, 월 경계 검증 보조)
+###   기댓값 (200 OK):
+###     totalSales 60000 / totalRefund 0 / netSales 60000
+###     feeRate 0.20 / platformFee 12000 / expectedPayout 48000
+###     salesCount 1 / cancellationCount 0 / status PENDING
+GET {{host}}/api/settlements?creatorId=1002&yearMonth=2025-03
+
+
+### [시나리오 4] creator-3 2025-03 정산 (빈 월 — sale-7은 2월이라 3월은 0)
+###   기댓값 (200 OK, 빈 월도 PENDING 0원 응답):
+###     totalSales 0 / totalRefund 0 / netSales 0
+###     feeRate 0.20 / platformFee 0 / expectedPayout 0
+###     salesCount 0 / cancellationCount 0 / status PENDING
+GET {{host}}/api/settlements?creatorId=1003&yearMonth=2025-03
