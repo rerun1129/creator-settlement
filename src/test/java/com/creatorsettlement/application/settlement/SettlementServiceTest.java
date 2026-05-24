@@ -1,5 +1,8 @@
 package com.creatorsettlement.application.settlement;
 
+import com.creatorsettlement.application.fee.FeePolicyService;
+import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
+import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.CreatorPayableView;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
@@ -25,6 +28,7 @@ import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculat
 import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCreatorRepository;
+import com.creatorsettlement.infrastructure.persistence.InMemoryFeePolicyRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySettlementRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +50,8 @@ class SettlementServiceTest {
     private InMemorySalesRepository salesRepository;
     private InMemoryCourseRepository courseRepository;
     private InMemoryCreatorRepository creatorRepository;
+    private InMemoryFeePolicyRepository feePolicyRepository;
+    private FeePolicyService feePolicyService;
     private SettlementService service;
 
     @BeforeEach
@@ -54,12 +60,16 @@ class SettlementServiceTest {
         courseRepository = new InMemoryCourseRepository();
         creatorRepository = new InMemoryCreatorRepository();
         salesRepository = new InMemorySalesRepository(courseRepository);
+        feePolicyRepository = new InMemoryFeePolicyRepository();
+        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository);
+        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
         service = new SettlementServiceImpl(
                 settlementRepository,
                 salesRepository,
                 creatorRepository,
                 new MonthlySettlementCalculator(),
-                new SettlementAmountCalculator()
+                new SettlementAmountCalculator(),
+                feePolicyService
         );
     }
 
@@ -131,6 +141,31 @@ class SettlementServiceTest {
         assertThat(response.salesCount()).isEqualTo(2L);
         assertThat(response.cancellationCount()).isEqualTo(1L);
         assertThat(response.feeRate()).usingComparator(BigDecimal::compareTo).isEqualTo(FeeRate.defaultRate().value());
+    }
+
+    @Test
+    @DisplayName("정산 대상 월의 effective 정책 rate가 platformFee 산출에 적용된다")
+    void applies_effective_policy_rate_when_policy_registered_for_target_month() {
+        // Given
+        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 8, 1)));
+
+        CreatorId creatorId = CreatorId.of(99L);
+        YearMonth yearMonth = YearMonth.of(2026, 8);
+        CourseId courseId = CourseId.of(990L);
+
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의X"));
+
+        SalesRecord sale = SalesRecord.of(courseId, StudentId.of(99L), Money.of(new BigDecimal("100000")), OccurredAt.of(LocalDateTime.of(2026, 8, 10, 10, 0)));
+        salesRepository.saveSalesRecord(sale);
+
+        MonthlySettlementQuery command = new MonthlySettlementQuery(99L, yearMonth);
+
+        // When
+        MonthlySettlementView response = service.getMonthlySettlement(command);
+
+        // Then
+        assertThat(response.feeRate()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("0.18"));
+        assertThat(response.platformFee()).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("18000"));
     }
 
     @Test

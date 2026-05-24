@@ -1,5 +1,6 @@
 package com.creatorsettlement.application.settlement;
 
+import com.creatorsettlement.application.fee.FeePolicyService;
 import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.CreatorPayableView;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
@@ -42,19 +43,22 @@ public class SettlementServiceImpl implements SettlementService {
     private final CreatorRepository creatorRepository;
     private final MonthlySettlementCalculator monthlySettlementCalculator;
     private final SettlementAmountCalculator settlementAmountCalculator;
+    private final FeePolicyService feePolicyService;
 
     public SettlementServiceImpl(
             SettlementRepository settlementRepository,
             SalesRepository salesRepository,
             CreatorRepository creatorRepository,
             MonthlySettlementCalculator monthlySettlementCalculator,
-            SettlementAmountCalculator settlementAmountCalculator
+            SettlementAmountCalculator settlementAmountCalculator,
+            FeePolicyService feePolicyService
     ) {
         this.settlementRepository = settlementRepository;
         this.salesRepository = salesRepository;
         this.creatorRepository = creatorRepository;
         this.monthlySettlementCalculator = monthlySettlementCalculator;
         this.settlementAmountCalculator = settlementAmountCalculator;
+        this.feePolicyService = feePolicyService;
     }
 
     @Override
@@ -105,7 +109,7 @@ public class SettlementServiceImpl implements SettlementService {
             totalRefundByCreator.merge(view.creatorId(), view.record().getRefundAmount().value(), BigDecimal::add);
         }
 
-        FeeRate feeRate = FeeRate.defaultRate();
+        FeeRate feeRate = feePolicyService.findEffectiveRate(query.from());
         List<CreatorPayableView> responses = allCreatorIds.stream()
                 .map(creatorId -> {
                     BigDecimal totalSales = totalSalesByCreator.getOrDefault(creatorId, BigDecimal.ZERO);
@@ -126,11 +130,12 @@ public class SettlementServiceImpl implements SettlementService {
     private Settlement calculatePending(CreatorId creatorId, YearMonth yearMonth) {
         SalesSummary sa = salesRepository.findSalesSummaryByCreatorAndMonth(creatorId, yearMonth);
         CancellationSummary ca = salesRepository.findCancellationSummaryByCreatorAndMonth(creatorId, yearMonth);
+        FeeRate feeRate = feePolicyService.findEffectiveRate(yearMonth.atDay(1));
         return monthlySettlementCalculator.calculate(
                 creatorId, yearMonth,
                 sa.totalAmount(), ca.totalRefund(),
                 sa.count(), ca.count(),
-                FeeRate.defaultRate()
+                feeRate
         );
     }
 
