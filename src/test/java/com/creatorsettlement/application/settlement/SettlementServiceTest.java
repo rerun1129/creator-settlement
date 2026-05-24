@@ -31,6 +31,7 @@ import com.creatorsettlement.infrastructure.persistence.InMemoryCreatorRepositor
 import com.creatorsettlement.infrastructure.persistence.InMemoryFeePolicyRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySettlementRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemorySalesRepository;
+import com.creatorsettlement.infrastructure.settlement.excel.SettlementExcelWriter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,13 +64,15 @@ class SettlementServiceTest {
         feePolicyRepository = new InMemoryFeePolicyRepository();
         feePolicyService = new FeePolicyServiceImpl(feePolicyRepository);
         feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
+        SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
         service = new SettlementServiceImpl(
                 settlementRepository,
                 salesRepository,
                 creatorRepository,
                 new MonthlySettlementCalculator(),
                 new SettlementAmountCalculator(),
-                feePolicyService
+                feePolicyService,
+                settlementExcelWriter
         );
     }
 

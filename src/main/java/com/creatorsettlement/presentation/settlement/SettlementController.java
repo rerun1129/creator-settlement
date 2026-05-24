@@ -1,6 +1,7 @@
 package com.creatorsettlement.presentation.settlement;
 
 import com.creatorsettlement.application.settlement.SettlementService;
+import com.creatorsettlement.application.settlement.dto.SettlementExcelDownload;
 import com.creatorsettlement.presentation.settlement.dto.ConfirmSettlementRequest;
 import com.creatorsettlement.presentation.settlement.dto.GetMonthlySettlementRequest;
 import com.creatorsettlement.presentation.settlement.dto.GetSettlementRangeRequest;
@@ -8,6 +9,7 @@ import com.creatorsettlement.presentation.settlement.dto.MonthlySettlementRespon
 import com.creatorsettlement.presentation.settlement.dto.PaySettlementRequest;
 import com.creatorsettlement.presentation.settlement.dto.SettlementRangeResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +41,16 @@ public class SettlementController {
             @Valid @ModelAttribute GetSettlementRangeRequest request) {
         return ResponseEntity.ok(SettlementRangeResponse.from(
                 settlementService.getSettlementsInRange(request.toQuery())));
+    }
+
+    @GetMapping("/aggregate/download")
+    public ResponseEntity<byte[]> downloadSettlementsInRange(
+            @Valid @ModelAttribute GetSettlementRangeRequest request) {
+        SettlementExcelDownload download = settlementService.exportSettlementsInRangeAsExcel(request.toQuery());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, download.contentType())
+                .header(HttpHeaders.CONTENT_DISPOSITION, download.contentDisposition())
+                .body(download.body());
     }
 
     @PostMapping("/confirm")

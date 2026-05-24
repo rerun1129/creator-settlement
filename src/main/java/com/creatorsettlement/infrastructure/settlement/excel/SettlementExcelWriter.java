@@ -1,6 +1,7 @@
 package com.creatorsettlement.infrastructure.settlement.excel;
 
 import com.creatorsettlement.application.settlement.dto.CreatorPayableView;
+import com.creatorsettlement.application.settlement.dto.SettlementExcelDownload;
 import com.creatorsettlement.application.settlement.dto.SettlementRangeView;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
@@ -24,8 +26,11 @@ public class SettlementExcelWriter {
     private static final int DATA_START_ROW_INDEX = 1;
     private static final int CREATOR_ID_COLUMN = 0;
     private static final int AMOUNT_COLUMN = 1;
+    private static final String XLSX_CONTENT_TYPE =
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String FILENAME_FORMAT = "settlements_%s_%s.xlsx";
 
-    public byte[] write(SettlementRangeView view) {
+    public SettlementExcelDownload write(SettlementRangeView view, LocalDate from, LocalDate to) {
         try (XSSFWorkbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             XSSFSheet sheet = workbook.createSheet(SHEET_NAME);
@@ -34,7 +39,9 @@ public class SettlementExcelWriter {
             int totalRowIndex = nextRowIndex + 1;
             writeTotalRow(sheet, totalRowIndex, view.totalAmount().doubleValue());
             workbook.write(output);
-            return output.toByteArray();
+            byte[] body = output.toByteArray();
+            String filename = String.format(FILENAME_FORMAT, from, to);
+            return SettlementExcelDownload.of(body, filename, XLSX_CONTENT_TYPE);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

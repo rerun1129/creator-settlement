@@ -1,6 +1,7 @@
 package com.creatorsettlement.infrastructure.settlement.excel;
 
 import com.creatorsettlement.application.settlement.dto.CreatorPayableView;
+import com.creatorsettlement.application.settlement.dto.SettlementExcelDownload;
 import com.creatorsettlement.application.settlement.dto.SettlementRangeView;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -24,7 +25,8 @@ class SettlementExcelWriterTest {
     void writes_header_row_with_english_column_names() throws IOException {
         SettlementRangeView view = new SettlementRangeView(List.of(), BigDecimal.ZERO);
 
-        byte[] bytes = writer.write(view);
+        SettlementExcelDownload download = writer.write(view, java.time.LocalDate.of(2026, 5, 1), java.time.LocalDate.of(2026, 5, 31));
+        byte[] bytes = download.body();
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
             XSSFSheet sheet = workbook.getSheet("settlements");
@@ -45,7 +47,8 @@ class SettlementExcelWriterTest {
                 new BigDecimal("600")
         );
 
-        byte[] bytes = writer.write(view);
+        SettlementExcelDownload download = writer.write(view, java.time.LocalDate.of(2026, 5, 1), java.time.LocalDate.of(2026, 5, 31));
+        byte[] bytes = download.body();
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
             XSSFSheet sheet = workbook.getSheet("settlements");
@@ -66,7 +69,8 @@ class SettlementExcelWriterTest {
                 new BigDecimal("100")
         );
 
-        byte[] bytes = writer.write(view);
+        SettlementExcelDownload download = writer.write(view, java.time.LocalDate.of(2026, 5, 1), java.time.LocalDate.of(2026, 5, 31));
+        byte[] bytes = download.body();
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
             XSSFSheet sheet = workbook.getSheet("settlements");
@@ -83,7 +87,8 @@ class SettlementExcelWriterTest {
                 new BigDecimal("64000")
         );
 
-        byte[] bytes = writer.write(view);
+        SettlementExcelDownload download = writer.write(view, java.time.LocalDate.of(2026, 5, 1), java.time.LocalDate.of(2026, 5, 31));
+        byte[] bytes = download.body();
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
             XSSFSheet sheet = workbook.getSheet("settlements");
@@ -97,7 +102,8 @@ class SettlementExcelWriterTest {
     void writes_header_and_total_when_responses_empty() throws IOException {
         SettlementRangeView view = new SettlementRangeView(List.of(), BigDecimal.ZERO);
 
-        byte[] bytes = writer.write(view);
+        SettlementExcelDownload download = writer.write(view, java.time.LocalDate.of(2026, 5, 1), java.time.LocalDate.of(2026, 5, 31));
+        byte[] bytes = download.body();
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {
             XSSFSheet sheet = workbook.getSheet("settlements");
@@ -113,7 +119,8 @@ class SettlementExcelWriterTest {
     void produces_parseable_xlsx_bytes() {
         SettlementRangeView view = new SettlementRangeView(List.of(), BigDecimal.ZERO);
 
-        byte[] bytes = writer.write(view);
+        SettlementExcelDownload download = writer.write(view, java.time.LocalDate.of(2026, 5, 1), java.time.LocalDate.of(2026, 5, 31));
+        byte[] bytes = download.body();
 
         assertThatCode(() -> {
             try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes))) {

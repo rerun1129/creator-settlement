@@ -6,6 +6,7 @@ import com.creatorsettlement.application.settlement.dto.CreatorPayableView;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementView;
 import com.creatorsettlement.application.settlement.dto.PaySettlementCommand;
+import com.creatorsettlement.application.settlement.dto.SettlementExcelDownload;
 import com.creatorsettlement.application.settlement.dto.SettlementRangeQuery;
 import com.creatorsettlement.application.settlement.dto.SettlementRangeView;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
@@ -23,6 +24,7 @@ import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
 import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
 import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
+import com.creatorsettlement.infrastructure.settlement.excel.SettlementExcelWriter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +48,7 @@ public class SettlementServiceImpl implements SettlementService {
     private final MonthlySettlementCalculator monthlySettlementCalculator;
     private final SettlementAmountCalculator settlementAmountCalculator;
     private final FeePolicyService feePolicyService;
+    private final SettlementExcelWriter settlementExcelWriter;
 
     public SettlementServiceImpl(
             SettlementRepository settlementRepository,
@@ -53,7 +56,8 @@ public class SettlementServiceImpl implements SettlementService {
             CreatorRepository creatorRepository,
             MonthlySettlementCalculator monthlySettlementCalculator,
             SettlementAmountCalculator settlementAmountCalculator,
-            FeePolicyService feePolicyService
+            FeePolicyService feePolicyService,
+            SettlementExcelWriter settlementExcelWriter
     ) {
         this.settlementRepository = settlementRepository;
         this.salesRepository = salesRepository;
@@ -61,6 +65,7 @@ public class SettlementServiceImpl implements SettlementService {
         this.monthlySettlementCalculator = monthlySettlementCalculator;
         this.settlementAmountCalculator = settlementAmountCalculator;
         this.feePolicyService = feePolicyService;
+        this.settlementExcelWriter = settlementExcelWriter;
     }
 
     @Override
@@ -119,6 +124,11 @@ public class SettlementServiceImpl implements SettlementService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new SettlementRangeView(responses, totalAmount);
+    }
+
+    @Override
+    public SettlementExcelDownload exportSettlementsInRangeAsExcel(SettlementRangeQuery query) {
+        return settlementExcelWriter.write(getSettlementsInRange(query), query.from(), query.to());
     }
 
     private Map<CreatorId, Map<YearMonth, BigDecimal>> groupSalesByCreatorMonth(List<SalesRecordView> salesViews) {
