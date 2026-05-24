@@ -8,6 +8,12 @@ Usage:
 
 기존 script/generate_data.py와 완전히 독립적인 단일 스크립트.
 utility(run_sql / load_env / sql_escape)도 자체 정의 — 외부 모듈 의존은 python-dotenv 1개.
+
+sparse 분포: 각 creator마다 활성 월 set을 부여하여 일부 월에는 sales가 아예 발생하지 않도록 함.
+  - 60% creator: 전 기간 활동 (휴지기 0개월)
+  - 25% creator: 1~3개월 휴지기
+  - 12% creator: 4~7개월 휴지기
+  - 3%  creator: 8~10개월 휴지기
 """
 
 from __future__ import annotations
@@ -33,16 +39,16 @@ for _stream in (sys.stdout, sys.stderr):
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CONTAINER = "creator-settlement-mysql"
 
-TARGET_SALES = 1_000_000
-TARGET_CANCELLATIONS = 50_000
-FREE_SALES = 50_000
+TARGET_SALES = 3_000_000
+TARGET_CANCELLATIONS = 150_000
+FREE_SALES = 150_000
 PAID_SALES = TARGET_SALES - FREE_SALES
 
-FULL_CANCEL = 35_000
+FULL_CANCEL = 105_000
 PARTIAL_CANCEL = TARGET_CANCELLATIONS - FULL_CANCEL
 
 PAID_START = datetime(2025, 6, 1, 0, 0, 0)
-PAID_END = datetime(2026, 5, 22, 23, 59, 59)
+PAID_END = datetime(2026, 5, 24, 23, 59, 59)
 
 STUDENT_RANGE_MAX = 300_000
 BATCH = 5_000
@@ -116,39 +122,91 @@ def assign_course_prices(rng: random.Random, course_ids: list[int]) -> dict[int,
     return prices
 
 
-def generate_daily_weights(start: datetime, end: datetime) -> tuple[list[datetime], list[float]]:
-    days = (end.date() - start.date()).days + 1
-    bases = [start + timedelta(days=i) for i in range(days)]
-    weights = [1.0 + 2.0 * (i / max(days - 1, 1)) for i in range(days)]
-    return bases, weights
+def all_months_in_range(start: datetime, end: datetime) -> list[str]:
+    months: list[str] = []
+    y, m = start.year, start.month
+    while (y, m) <= (end.year, end.month):
+        months.append(f"{y:04d}{m:02d}")
+        if m == 12:
+            y, m = y + 1, 1
+        else:
+            m += 1
+    return months
 
 
-def random_paid_at(rng: random.Random, bases: list[datetime], weights: list[float], end: datetime) -> datetime:
-    day = rng.choices(bases, weights=weights, k=1)[0]
-    cap_seconds = min(86399.999999, (end - day).total_seconds())
-    if cap_seconds <= 0:
-        return day
-    return day + timedelta(seconds=rng.uniform(0, cap_seconds))
+def monthly_weights(months: list[str]) -> dict[str, float]:
+    n = len(months)
+    return {m: 1.0 + 2.0 * (i / max(n - 1, 1)) for i, m in enumerate(months)}
+
+
+def assign_creator_active_months(
+    rng: random.Random,
+    creator_ids: list[int],
+    all_months: list[str],
+) -> dict[int, list[str]]:
+    result: dict[int, list[str]] = {}
+    month_count = len(all_months)
+    for cid in creator_ids:
+        roll = rng.random()
+        if roll < 0.60:
+            inactive_n = 0
+        elif roll < 0.85:
+            inactive_n = rng.randint(1, 3)
+        elif roll < 0.97:
+            inactive_n = rng.randint(4, 7)
+        else:
+            inactive_n = rng.randint(8, 10)
+        inactive_n = min(inactive_n, month_count - 1)
+        inactive = set(rng.sample(all_months, inactive_n)) if inactive_n > 0 else set()
+        result[cid] = [m for m in all_months if m not in inactive]
+    return result
+
+
+def random_paid_at_in_months(
+    rng: random.Random,
+    active_months: list[str],
+    weights: list[float],
+    end: datetime,
+) -> datetime:
+    chosen = rng.choices(active_months, weights=weights, k=1)[0]
+    y = int(chosen[:4])
+    m = int(chosen[4:])
+    month_start = datetime(y, m, 1)
+    if m == 12:
+        month_end_excl = datetime(y + 1, 1, 1)
+    else:
+        month_end_excl = datetime(y, m + 1, 1)
+    actual_end_excl = min(month_end_excl, end + timedelta(microseconds=1))
+    span_seconds = (actual_end_excl - month_start).total_seconds()
+    if span_seconds <= 0:
+        return month_start
+    return month_start + timedelta(seconds=rng.uniform(0, span_seconds))
 
 
 def generate_sales_rows(
-    rng: random.Random, course_prices: dict[int, int]
+    rng: random.Random,
+    course_prices: dict[int, int],
+    course_creator: dict[int, int],
+    creator_active_weights: dict[int, tuple[list[str], list[float]]],
 ) -> tuple[list[tuple[int, int, int, datetime]], list[int]]:
     free_ids = [cid for cid, price in course_prices.items() if price == 0]
     paid_ids = [cid for cid, price in course_prices.items() if price > 0]
     paid_weights = [math.exp(rng.gauss(0, 1)) for _ in paid_ids]
-    bases, day_weights = generate_daily_weights(PAID_START, PAID_END)
 
     rows: list[tuple[int, int, int, datetime]] = []
     for _ in range(FREE_SALES):
         cid = rng.choice(free_ids)
+        creator_id = course_creator[cid]
+        active, weights = creator_active_weights[creator_id]
         sid = rng.randint(1, STUDENT_RANGE_MAX)
-        rows.append((cid, sid, 0, random_paid_at(rng, bases, day_weights, PAID_END)))
+        rows.append((cid, sid, 0, random_paid_at_in_months(rng, active, weights, PAID_END)))
 
     paid_cids = rng.choices(paid_ids, weights=paid_weights, k=PAID_SALES)
     for cid in paid_cids:
+        creator_id = course_creator[cid]
+        active, weights = creator_active_weights[creator_id]
         sid = rng.randint(1, STUDENT_RANGE_MAX)
-        rows.append((cid, sid, course_prices[cid], random_paid_at(rng, bases, day_weights, PAID_END)))
+        rows.append((cid, sid, course_prices[cid], random_paid_at_in_months(rng, active, weights, PAID_END)))
 
     rng.shuffle(rows)
     paid_indexes = [i for i, r in enumerate(rows) if r[2] > 0]
@@ -214,6 +272,16 @@ def insert_sales(env: dict, rows: list[tuple[int, int, int, datetime]]) -> None:
 def fetch_sales_ids(env: dict) -> list[int]:
     out = run_sql(env, "SELECT sales_record_id FROM sales_record ORDER BY sales_record_id;", capture=True)
     return [int(line) for line in out.splitlines() if line.strip()]
+
+
+def fetch_course_creator_map(env: dict) -> dict[int, int]:
+    out = run_sql(env, "SELECT course_id, creator_id FROM course ORDER BY course_id;", capture=True)
+    result: dict[int, int] = {}
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) == 2:
+            result[int(parts[0])] = int(parts[1])
+    return result
 
 
 def build_cancellation_rows(
@@ -292,11 +360,33 @@ def verify(env: dict) -> dict:
     }
 
 
+def summarize_active_distribution(active_map: dict[int, list[str]], month_count: int) -> None:
+    bucket_0 = bucket_13 = bucket_47 = bucket_810 = 0
+    for months in active_map.values():
+        inactive = month_count - len(months)
+        if inactive == 0:
+            bucket_0 += 1
+        elif inactive <= 3:
+            bucket_13 += 1
+        elif inactive <= 7:
+            bucket_47 += 1
+        else:
+            bucket_810 += 1
+    avg_active = sum(len(v) for v in active_map.values()) / max(len(active_map), 1)
+    print(f"[plan] inactive months / creator: 0={bucket_0}, 1~3={bucket_13}, "
+          f"4~7={bucket_47}, 8~10={bucket_810}")
+    print(f"[plan] avg active months per creator: {avg_active:.2f} / {month_count}")
+
+
 def preview(rng: random.Random) -> None:
     course_ids = list(range(1, 10_001))
     prices = assign_course_prices(rng, course_ids)
     free_n = sum(1 for p in prices.values() if p == 0)
     paid_n = len(prices) - free_n
+    fake_creators = list(range(1, 1001))
+    months = all_months_in_range(PAID_START, PAID_END)
+    active_map = assign_creator_active_months(rng, fake_creators, months)
+
     samples = rng.sample(course_ids, 10)
     print(f"[plan] course: free={free_n}, paid={paid_n}")
     print(f"[plan] price samples (course_id → price): {[(c, prices[c]) for c in samples]}")
@@ -306,6 +396,8 @@ def preview(rng: random.Random) -> None:
     print(f"[plan] paid_at range: {PAID_START} ~ {PAID_END}")
     print(f"[plan] student_id range: 1 ~ {STUDENT_RANGE_MAX:,}")
     print(f"[plan] batch size: {BATCH}")
+    print(f"[plan] months in range ({len(months)}): {months}")
+    summarize_active_distribution(active_map, len(months))
 
 
 def main() -> None:
@@ -332,12 +424,26 @@ def main() -> None:
         raise SystemExit("course table is empty. run generate_data.py first.")
     print(f"[step] courses loaded: {len(course_ids)}")
 
+    print("[step] fetching course → creator mapping ...")
+    course_creator = fetch_course_creator_map(env)
+    print(f"[step] course → creator mapped: {len(course_creator)}")
+
+    creator_ids = sorted(set(course_creator.values()))
+    months = all_months_in_range(PAID_START, PAID_END)
+    weight_map = monthly_weights(months)
+    creator_active = assign_creator_active_months(rng, creator_ids, months)
+    creator_active_weights = {
+        cid: (active, [weight_map[m] for m in active])
+        for cid, active in creator_active.items()
+    }
+    summarize_active_distribution(creator_active, len(months))
+
     prices = assign_course_prices(rng, course_ids)
     free_n = sum(1 for p in prices.values() if p == 0)
     print(f"[step] prices assigned: free={free_n}, paid={len(prices) - free_n}")
 
     print("[step] generating sales rows in memory ...")
-    sales_rows, paid_indexes = generate_sales_rows(rng, prices)
+    sales_rows, paid_indexes = generate_sales_rows(rng, prices, course_creator, creator_active_weights)
     print(f"[step] sales rows: {len(sales_rows)} (paid candidates: {len(paid_indexes)})")
 
     print("[step] building cancellation plan ...")
