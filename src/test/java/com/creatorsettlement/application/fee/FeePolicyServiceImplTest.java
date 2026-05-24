@@ -3,6 +3,7 @@ package com.creatorsettlement.application.fee;
 import com.creatorsettlement.application.fee.dto.FeePolicyView;
 import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.domain.model.vo.FeeRate;
+import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
 import com.creatorsettlement.infrastructure.persistence.InMemoryFeePolicyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +31,7 @@ class FeePolicyServiceImplTest {
         @BeforeEach
         void setUp() {
             repository = new InMemoryFeePolicyRepository();
-            service = new FeePolicyServiceImpl(repository);
+            service = new FeePolicyServiceImpl(repository, new FeePolicyDomainService(repository));
         }
 
         @Test
@@ -114,7 +115,7 @@ class FeePolicyServiceImplTest {
         @BeforeEach
         void setUp() {
             repository = new InMemoryFeePolicyRepository();
-            service = new FeePolicyServiceImpl(repository);
+            service = new FeePolicyServiceImpl(repository, new FeePolicyDomainService(repository));
         }
 
         @Test
@@ -154,7 +155,7 @@ class FeePolicyServiceImplTest {
         @BeforeEach
         void setUp() {
             repository = new InMemoryFeePolicyRepository();
-            service = new FeePolicyServiceImpl(repository);
+            service = new FeePolicyServiceImpl(repository, new FeePolicyDomainService(repository));
         }
 
         @Test

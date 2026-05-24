@@ -16,6 +16,7 @@ import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
+import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
 import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculator;
 import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
@@ -52,7 +53,7 @@ class SettlementServiceRangeTest {
         creatorRepository = new InMemoryCreatorRepository();
         salesRepository = new InMemorySalesRepository(courseRepository);
         feePolicyRepository = new InMemoryFeePolicyRepository();
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository);
+        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, new FeePolicyDomainService(feePolicyRepository));
         feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
         SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
         SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
