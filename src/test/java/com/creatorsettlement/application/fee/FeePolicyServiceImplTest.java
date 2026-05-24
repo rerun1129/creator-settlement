@@ -43,14 +43,16 @@ class FeePolicyServiceImplTest {
     }
 
     @Test
-    @DisplayName("기준일 이전 정책이 없으면 예외")
-    void findEffectiveRate_throws_whenNoPolicyEffective() {
+    @DisplayName("기준일 이전 정책이 없으면 기본 수수료율(20%) 반환")
+    void findEffectiveRate_returnsDefaultRate_whenNoPolicyEffective() {
         // Given
         service.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2026, 7, 1)));
 
-        // When & Then
-        assertThatThrownBy(() -> service.findEffectiveRate(LocalDate.of(2026, 6, 1)))
-                .isInstanceOf(IllegalArgumentException.class);
+        // When
+        FeeRate rate = service.findEffectiveRate(LocalDate.of(2026, 6, 1));
+
+        // Then
+        assertThat(rate.value()).isEqualByComparingTo(FeeRate.defaultRate().value());
     }
 
     @Test

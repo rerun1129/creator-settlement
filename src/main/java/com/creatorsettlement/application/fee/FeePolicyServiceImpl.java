@@ -2,14 +2,15 @@ package com.creatorsettlement.application.fee;
 
 import com.creatorsettlement.application.fee.dto.FeePolicyView;
 import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
-import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.repository.fee.FeePolicyRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Service
 public class FeePolicyServiceImpl implements FeePolicyService {
 
     private final FeePolicyRepository repository;
@@ -22,8 +23,8 @@ public class FeePolicyServiceImpl implements FeePolicyService {
     public FeeRate findEffectiveRate(LocalDate referenceDate) {
         LocalDate firstDayOfMonth = referenceDate.withDayOfMonth(1);
         return repository.findEffectiveAt(firstDayOfMonth)
-                .orElseThrow(() -> new IllegalArgumentException(DomainErrorMessage.FEE_POLICY_NOT_FOUND_FOR_DATE.message()))
-                .rate();
+                .map(FeePolicy::rate)
+                .orElse(FeeRate.defaultRate());
     }
 
     @Override
