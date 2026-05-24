@@ -85,9 +85,9 @@ class SettlementServiceLifecycleTest {
         void confirm_changes_status_to_CONFIRMED_when_stored_PENDING() {
             // Given
             CreatorId creatorId = CreatorId.of(50L);
-            YearMonth yearMonth = YearMonth.of(2026, 7);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             settlementRepository.save(pendingFixture(creatorId, yearMonth));
-            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 1, 9, 0);
+            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 5, 1, 9, 0);
 
             // When
             service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime));
@@ -103,20 +103,20 @@ class SettlementServiceLifecycleTest {
         void confirm_inserts_CONFIRMED_when_not_stored() {
             // Given
             CreatorId creatorId = CreatorId.of(51L);
-            YearMonth yearMonth = YearMonth.of(2026, 7);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             CourseId courseId = CourseId.of(510L);
             courseRepository.saveCourse(Course.of(courseId, creatorId, "강의E"));
 
-            SalesRecord sale1 = SalesRecord.of(courseId, StudentId.of(10L), Money.of(new BigDecimal("30000")), OccurredAt.of(LocalDateTime.of(2026, 7, 5, 10, 0)));
-            SalesRecord sale2 = SalesRecord.of(courseId, StudentId.of(11L), Money.of(new BigDecimal("20000")), OccurredAt.of(LocalDateTime.of(2026, 7, 15, 10, 0)));
+            SalesRecord sale1 = SalesRecord.of(courseId, StudentId.of(10L), Money.of(new BigDecimal("30000")), OccurredAt.of(LocalDateTime.of(2026, 4, 5, 10, 0)));
+            SalesRecord sale2 = SalesRecord.of(courseId, StudentId.of(11L), Money.of(new BigDecimal("20000")), OccurredAt.of(LocalDateTime.of(2026, 4, 15, 10, 0)));
             salesRepository.saveSalesRecord(sale1);
             salesRepository.saveSalesRecord(sale2);
 
             SalesRecordId salesRecordId1 = SalesRecordId.of(1L);
-            CancellationRecord cancellation = CancellationRecord.of(salesRecordId1, Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 7, 20, 10, 0)));
+            CancellationRecord cancellation = CancellationRecord.of(salesRecordId1, Money.of(new BigDecimal("10000")), OccurredAt.of(LocalDateTime.of(2026, 4, 20, 10, 0)));
             salesRepository.saveCancellationRecord(cancellation);
 
-            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 1, 9, 0);
+            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 5, 1, 9, 0);
 
             // When
             service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime));
@@ -136,9 +136,9 @@ class SettlementServiceLifecycleTest {
         void confirm_propagates_ALREADY_CONFIRMED_from_domain() {
             // Given
             CreatorId creatorId = CreatorId.of(52L);
-            YearMonth yearMonth = YearMonth.of(2026, 7);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             settlementRepository.save(confirmedFixture(creatorId, yearMonth));
-            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 2, 9, 0);
+            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 5, 2, 9, 0);
 
             // When & Then
             assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime)))
@@ -151,9 +151,9 @@ class SettlementServiceLifecycleTest {
         void confirm_propagates_ALREADY_PAID_from_domain() {
             // Given
             CreatorId creatorId = CreatorId.of(53L);
-            YearMonth yearMonth = YearMonth.of(2026, 7);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             settlementRepository.save(paidFixture(creatorId, yearMonth));
-            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 3, 9, 0);
+            LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 5, 3, 9, 0);
 
             // When & Then
             assertThatThrownBy(() -> service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime)))
@@ -212,7 +212,7 @@ class SettlementServiceLifecycleTest {
                     Money.of(new BigDecimal("18000")),
                     SettlementAmount.of(new BigDecimal("72000")),
                     5L, 1L,
-                    OccurredAt.of(LocalDateTime.of(2026, 8, 1, 9, 0))
+                    OccurredAt.of(LocalDateTime.of(2026, 5, 1, 9, 0))
             );
         }
 
@@ -226,8 +226,8 @@ class SettlementServiceLifecycleTest {
                     Money.of(new BigDecimal("18000")),
                     SettlementAmount.of(new BigDecimal("72000")),
                     5L, 1L,
-                    OccurredAt.of(LocalDateTime.of(2026, 8, 1, 9, 0)),
-                    OccurredAt.of(LocalDateTime.of(2026, 9, 1, 9, 0))
+                    OccurredAt.of(LocalDateTime.of(2026, 5, 1, 9, 0)),
+                    OccurredAt.of(LocalDateTime.of(2026, 5, 2, 9, 0))
             );
         }
     }
@@ -272,9 +272,9 @@ class SettlementServiceLifecycleTest {
         void pay_changes_status_to_PAID_when_stored_CONFIRMED() {
             // Given
             CreatorId creatorId = CreatorId.of(60L);
-            YearMonth yearMonth = YearMonth.of(2026, 8);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             settlementRepository.save(confirmedFixture(creatorId, yearMonth));
-            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 1, 9, 0);
+            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 5, 1, 9, 0);
 
             // When
             service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime));
@@ -290,8 +290,8 @@ class SettlementServiceLifecycleTest {
         void pay_throws_SETTLEMENT_NOT_FOUND_when_not_stored() {
             // Given
             CreatorId creatorId = CreatorId.of(61L);
-            YearMonth yearMonth = YearMonth.of(2026, 8);
-            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 1, 9, 0);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
+            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 5, 1, 9, 0);
 
             // When & Then
             assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
@@ -304,9 +304,9 @@ class SettlementServiceLifecycleTest {
         void pay_propagates_NOT_CONFIRMED_FOR_PAYMENT_from_domain_when_PENDING() {
             // Given
             CreatorId creatorId = CreatorId.of(62L);
-            YearMonth yearMonth = YearMonth.of(2026, 8);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             settlementRepository.save(pendingFixture(creatorId, yearMonth));
-            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 2, 9, 0);
+            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 5, 2, 9, 0);
 
             // When & Then
             assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
@@ -319,9 +319,9 @@ class SettlementServiceLifecycleTest {
         void pay_propagates_ALREADY_PAID_from_domain() {
             // Given
             CreatorId creatorId = CreatorId.of(63L);
-            YearMonth yearMonth = YearMonth.of(2026, 8);
+            YearMonth yearMonth = YearMonth.of(2026, 4);
             settlementRepository.save(paidFixture(creatorId, yearMonth));
-            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 3, 9, 0);
+            LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 5, 3, 9, 0);
 
             // When & Then
             assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
@@ -380,7 +380,7 @@ class SettlementServiceLifecycleTest {
                     Money.of(new BigDecimal("18000")),
                     SettlementAmount.of(new BigDecimal("72000")),
                     5L, 1L,
-                    OccurredAt.of(LocalDateTime.of(2026, 8, 1, 9, 0))
+                    OccurredAt.of(LocalDateTime.of(2026, 5, 1, 9, 0))
             );
         }
 
@@ -394,8 +394,8 @@ class SettlementServiceLifecycleTest {
                     Money.of(new BigDecimal("18000")),
                     SettlementAmount.of(new BigDecimal("72000")),
                     5L, 1L,
-                    OccurredAt.of(LocalDateTime.of(2026, 8, 1, 9, 0)),
-                    OccurredAt.of(LocalDateTime.of(2026, 9, 1, 9, 0))
+                    OccurredAt.of(LocalDateTime.of(2026, 5, 1, 9, 0)),
+                    OccurredAt.of(LocalDateTime.of(2026, 5, 2, 9, 0))
             );
         }
     }
