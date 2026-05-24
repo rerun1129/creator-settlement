@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -37,10 +38,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorResponse> handleValidation(BindException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
-                .map(f -> f.getField() + ": " + f.getDefaultMessage())
+                .map(GlobalExceptionHandler::resolveFieldMessage)
                 .reduce((a, b) -> a + "; " + b).orElse("validation failed");
         return ResponseEntity.badRequest()
                 .body(ErrorResponse.of(400, "VALIDATION", msg));
+    }
+
+    private static String resolveFieldMessage(FieldError f) {
+        if ("typeMismatch".equals(f.getCode())) {
+            return f.getField() + ": 형식이 올바르지 않습니다";
+        }
+        return f.getField() + ": " + f.getDefaultMessage();
     }
 
     @ExceptionHandler(IllegalStateException.class)
