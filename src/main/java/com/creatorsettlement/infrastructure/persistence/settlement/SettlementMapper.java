@@ -44,23 +44,13 @@ class SettlementMapper {
         Money platformFee = Money.of(e.getPlatformFee());
         SettlementAmount expectedPayout = SettlementAmount.of(e.getExpectedPayout());
 
-        return switch (e.getStatus()) {
-            case PENDING -> Settlement.pendingSnapshot(
-                    creatorId, ym, totalSales, totalRefund, netSales,
-                    feeRate, platformFee, expectedPayout,
-                    e.getSalesCount(), e.getCancellationCount());
-            case CONFIRMED -> Settlement.confirmedSnapshot(
-                    creatorId, ym, totalSales, totalRefund, netSales,
-                    feeRate, platformFee, expectedPayout,
-                    e.getSalesCount(), e.getCancellationCount(),
-                    OccurredAt.of(e.getConfirmedAt()));
-            case PAID -> Settlement.paidSnapshot(
-                    creatorId, ym, totalSales, totalRefund, netSales,
-                    feeRate, platformFee, expectedPayout,
-                    e.getSalesCount(), e.getCancellationCount(),
-                    OccurredAt.of(e.getConfirmedAt()),
-                    OccurredAt.of(e.getPaidAt()));
-        };
+        return e.getStatus().toSettlement(
+                creatorId, ym, totalSales, totalRefund, netSales,
+                feeRate, platformFee, expectedPayout,
+                e.getSalesCount(), e.getCancellationCount(),
+                e.getConfirmedAt() == null ? null : OccurredAt.of(e.getConfirmedAt()),
+                e.getPaidAt() == null ? null : OccurredAt.of(e.getPaidAt())
+        );
     }
 
     static void applyTo(SettlementJpaEntity entity, Settlement domain) {
