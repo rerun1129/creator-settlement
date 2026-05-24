@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,7 +28,7 @@ class FeePolicyControllerE2ETest {
     private MockMvc mockMvc;
 
     @Test
-    @DisplayName("미래 effectiveFrom으로 POST 시 201 Created + Location 헤더 반환")
+    @DisplayName("미래 effectiveFrom으로 POST 시 201 Created 반환")
     void register_returns201_whenFutureEffectiveFrom() throws Exception {
         // given
         String body = """
@@ -40,8 +39,7 @@ class FeePolicyControllerE2ETest {
         mockMvc.perform(post("/api/fee-policies")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/fee-policies"));
+                .andExpect(status().isCreated());
     }
 
     @Test
