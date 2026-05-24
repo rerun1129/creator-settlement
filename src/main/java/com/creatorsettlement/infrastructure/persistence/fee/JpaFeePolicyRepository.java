@@ -30,6 +30,11 @@ public class JpaFeePolicyRepository implements FeePolicyRepository {
     }
 
     @Override
+    public boolean existsByEffectiveFrom(LocalDate effectiveFrom) {
+        return dataRepository.existsByEffectiveFrom(effectiveFrom);
+    }
+
+    @Override
     public Optional<FeePolicy> findEffectiveAt(LocalDate referenceDate) {
         return dataRepository.findTopByEffectiveFromLessThanEqualOrderByEffectiveFromDesc(referenceDate)
                 .map(FeePolicyMapper::toDomain);

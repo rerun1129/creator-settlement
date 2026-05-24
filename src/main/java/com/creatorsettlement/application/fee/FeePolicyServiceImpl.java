@@ -2,6 +2,7 @@ package com.creatorsettlement.application.fee;
 
 import com.creatorsettlement.application.fee.dto.FeePolicyView;
 import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
+import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.repository.fee.FeePolicyRepository;
@@ -29,6 +30,9 @@ public class FeePolicyServiceImpl implements FeePolicyService {
 
     @Override
     public void register(RegisterFeePolicyCommand cmd) {
+        if (repository.existsByEffectiveFrom(cmd.effectiveFrom())) {
+            throw new IllegalArgumentException(DomainErrorMessage.FEE_POLICY_DUPLICATE_EFFECTIVE_FROM.message());
+        }
         FeePolicy policy = FeePolicy.of(FeeRate.of(cmd.rate()), cmd.effectiveFrom());
         repository.save(policy);
     }

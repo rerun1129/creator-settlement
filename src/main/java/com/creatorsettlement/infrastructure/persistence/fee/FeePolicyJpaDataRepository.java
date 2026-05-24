@@ -11,4 +11,6 @@ public interface FeePolicyJpaDataRepository extends JpaRepository<FeePolicyJpaEn
     Optional<FeePolicyJpaEntity> findTopByEffectiveFromLessThanEqualOrderByEffectiveFromDesc(LocalDate referenceDate);
 
     List<FeePolicyJpaEntity> findAllByOrderByEffectiveFromDesc();
+
+    boolean existsByEffectiveFrom(LocalDate effectiveFrom);
 }

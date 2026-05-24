@@ -11,6 +11,8 @@ public interface FeePolicyRepository {
 
     void save(FeePolicy policy);
 
+    boolean existsByEffectiveFrom(LocalDate effectiveFrom);
+
     Optional<FeePolicy> findEffectiveAt(LocalDate referenceDate);
 
     List<FeePolicyRecord> findAllOrderByEffectiveFromDesc();

@@ -30,6 +30,12 @@ public class InMemoryFeePolicyRepository implements FeePolicyRepository {
     }
 
     @Override
+    public boolean existsByEffectiveFrom(LocalDate effectiveFrom) {
+        return store.values().stream()
+                .anyMatch(policy -> policy.effectiveFrom().equals(effectiveFrom));
+    }
+
+    @Override
     public Optional<FeePolicy> findEffectiveAt(LocalDate referenceDate) {
         return store.values().stream()
                 .filter(policy -> !policy.effectiveFrom().isAfter(referenceDate))
