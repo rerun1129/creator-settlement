@@ -6,6 +6,10 @@ spring:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 3000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -18,3 +22,7 @@ spring:
 
 server:
   port: ${SERVER_PORT:9090}
+  tomcat:
+    threads:
+      max: 400
+    accept-count: 200
