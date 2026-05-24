@@ -14,12 +14,6 @@ public interface CancellationJpaDataRepository extends JpaRepository<Cancellatio
 
     List<CancellationRecordJpaEntity> findAllBySalesRecordIdIn(Collection<Long> salesRecordIds);
 
-    @Query("SELECT c FROM CancellationRecordJpaEntity c WHERE c.cancelledAt >= :from AND c.cancelledAt < :toExclusive")
-    List<CancellationRecordJpaEntity> findByCancelledAtBetween(
-        @Param("from") LocalDateTime from,
-        @Param("toExclusive") LocalDateTime toExclusive
-    );
-
     @Query("""
         SELECT c FROM CancellationRecordJpaEntity c
         WHERE c.salesRecordId IN (
