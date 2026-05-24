@@ -30,9 +30,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -100,23 +102,15 @@ public class SettlementServiceImpl implements SettlementService {
         List<SalesRecordView> salesViews = salesRepository.findAllSalesView(fromDT, toExclusiveDT);
         List<CancellationView> cancellationViews = salesRepository.findCancellationsByDateRange(fromDT, toExclusiveDT);
 
-        Map<CreatorId, BigDecimal> totalSalesByCreator = new HashMap<>();
-        for (SalesRecordView view : salesViews) {
-            totalSalesByCreator.merge(view.creatorId(), view.record().getPaymentAmount().value(), BigDecimal::add);
-        }
-        Map<CreatorId, BigDecimal> totalRefundByCreator = new HashMap<>();
-        for (CancellationView view : cancellationViews) {
-            totalRefundByCreator.merge(view.creatorId(), view.record().getRefundAmount().value(), BigDecimal::add);
-        }
+        Map<CreatorId, Map<YearMonth, BigDecimal>> salesByCreatorMonth = groupSalesByCreatorMonth(salesViews);
+        Map<CreatorId, Map<YearMonth, BigDecimal>> refundByCreatorMonth = groupRefundsByCreatorMonth(cancellationViews);
 
-        FeeRate feeRate = feePolicyService.findEffectiveRate(query.from());
+        Map<YearMonth, FeeRate> rateCache = new HashMap<>();
         List<CreatorPayableView> responses = allCreatorIds.stream()
                 .map(creatorId -> {
-                    BigDecimal totalSales = totalSalesByCreator.getOrDefault(creatorId, BigDecimal.ZERO);
-                    BigDecimal totalRefund = totalRefundByCreator.getOrDefault(creatorId, BigDecimal.ZERO);
-                    BigDecimal expectedSettlementAmount = settlementAmountCalculator.calculateExpectedPayout(
-                            Money.of(totalSales), Money.of(totalRefund), feeRate);
-                    return new CreatorPayableView(creatorId.value(), expectedSettlementAmount);
+                    BigDecimal creatorExpected = expectedForCreator(
+                            creatorId, salesByCreatorMonth, refundByCreatorMonth, rateCache);
+                    return new CreatorPayableView(creatorId.value(), creatorExpected);
                 })
                 .toList();
 
@@ -125,6 +119,54 @@ public class SettlementServiceImpl implements SettlementService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new SettlementRangeView(responses, totalAmount);
+    }
+
+    private Map<CreatorId, Map<YearMonth, BigDecimal>> groupSalesByCreatorMonth(List<SalesRecordView> salesViews) {
+        Map<CreatorId, Map<YearMonth, BigDecimal>> result = new HashMap<>();
+        for (SalesRecordView view : salesViews) {
+            YearMonth ym = YearMonth.from(view.record().getPaidAt().value().toLocalDate());
+            result.computeIfAbsent(view.creatorId(), k -> new HashMap<>())
+                    .merge(ym, view.record().getPaymentAmount().value(), BigDecimal::add);
+        }
+        return result;
+    }
+
+    private Map<CreatorId, Map<YearMonth, BigDecimal>> groupRefundsByCreatorMonth(List<CancellationView> cancellationViews) {
+        Map<CreatorId, Map<YearMonth, BigDecimal>> result = new HashMap<>();
+        for (CancellationView view : cancellationViews) {
+            YearMonth ym = YearMonth.from(view.record().getCancelledAt().value().toLocalDate());
+            result.computeIfAbsent(view.creatorId(), k -> new HashMap<>())
+                    .merge(ym, view.record().getRefundAmount().value(), BigDecimal::add);
+        }
+        return result;
+    }
+
+    private BigDecimal expectedForCreator(
+            CreatorId creatorId,
+            Map<CreatorId, Map<YearMonth, BigDecimal>> salesByCreatorMonth,
+            Map<CreatorId, Map<YearMonth, BigDecimal>> refundByCreatorMonth,
+            Map<YearMonth, FeeRate> rateCache
+    ) {
+        Map<YearMonth, BigDecimal> creatorSales = salesByCreatorMonth.getOrDefault(creatorId, Map.of());
+        Map<YearMonth, BigDecimal> creatorRefunds = refundByCreatorMonth.getOrDefault(creatorId, Map.of());
+        Set<YearMonth> activeMonths = new HashSet<>();
+        activeMonths.addAll(creatorSales.keySet());
+        activeMonths.addAll(creatorRefunds.keySet());
+
+        BigDecimal creatorExpected = BigDecimal.ZERO;
+        for (YearMonth ym : activeMonths) {
+            FeeRate monthRate = rateFor(ym, rateCache);
+            BigDecimal monthSales = creatorSales.getOrDefault(ym, BigDecimal.ZERO);
+            BigDecimal monthRefund = creatorRefunds.getOrDefault(ym, BigDecimal.ZERO);
+            BigDecimal monthExpected = settlementAmountCalculator.calculateExpectedPayout(
+                    Money.of(monthSales), Money.of(monthRefund), monthRate);
+            creatorExpected = creatorExpected.add(monthExpected);
+        }
+        return creatorExpected;
+    }
+
+    private FeeRate rateFor(YearMonth ym, Map<YearMonth, FeeRate> rateCache) {
+        return rateCache.computeIfAbsent(ym, k -> feePolicyService.findEffectiveRate(k.atDay(1)));
     }
 
     private Settlement calculatePending(CreatorId creatorId, YearMonth yearMonth) {

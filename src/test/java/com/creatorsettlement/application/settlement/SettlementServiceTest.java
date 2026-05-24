@@ -608,6 +608,96 @@ class SettlementServiceTest {
                 .isEqualTo(new BigDecimal("40000"));
     }
 
+    @Test
+    @DisplayName("다중 월 range에서 각 월의 effective 정책 rate가 적용된다")
+    void getSettlementsInRange_appliesPerMonthPolicyRate_whenMultiMonthRange() {
+        // given
+        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 6, 1)));
+
+        CreatorId creatorId = CreatorId.of(99L);
+        creatorRepository.saveCreator(Creator.of(creatorId, "크리에이터99"));
+
+        CourseId courseId = CourseId.of(990L);
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의X"));
+
+        salesRepository.saveSalesRecord(SalesRecord.of(
+                courseId, StudentId.of(101L),
+                Money.of(new BigDecimal("100000")),
+                OccurredAt.of(LocalDateTime.of(2026, 1, 15, 10, 0))
+        ));
+        salesRepository.saveSalesRecord(SalesRecord.of(
+                courseId, StudentId.of(102L),
+                Money.of(new BigDecimal("100000")),
+                OccurredAt.of(LocalDateTime.of(2026, 6, 15, 10, 0))
+        ));
+
+        SettlementRangeQuery query = new SettlementRangeQuery(
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 12, 31)
+        );
+
+        // when
+        SettlementRangeView response = service.getSettlementsInRange(query);
+
+        // then
+        CreatorPayableView creatorView = response.responses().stream()
+                .filter(view -> view.creatorId().equals(99L))
+                .findFirst().orElseThrow();
+        assertThat(creatorView.expectedSettlementAmount())
+                .usingComparator(BigDecimal::compareTo)
+                .isEqualTo(new BigDecimal("162000"));
+        assertThat(response.totalAmount())
+                .usingComparator(BigDecimal::compareTo)
+                .isEqualTo(new BigDecimal("162000"));
+    }
+
+    @Test
+    @DisplayName("월별 net<0이면 그 달 fee=0으로 독립 산출하여 합산한다")
+    void getSettlementsInRange_handlesNegativeMonthIndependently_whenRefundExceedsSales() {
+        // given
+        CreatorId creatorId = CreatorId.of(99L);
+        creatorRepository.saveCreator(Creator.of(creatorId, "크리에이터99"));
+
+        CourseId courseId = CourseId.of(990L);
+        courseRepository.saveCourse(Course.of(courseId, creatorId, "강의X"));
+
+        salesRepository.saveSalesRecord(SalesRecord.of(
+                courseId, StudentId.of(201L),
+                Money.of(new BigDecimal("100000")),
+                OccurredAt.of(LocalDateTime.of(2026, 1, 15, 10, 0))
+        ));
+        salesRepository.saveSalesRecord(SalesRecord.of(
+                courseId, StudentId.of(202L),
+                Money.of(new BigDecimal("50000")),
+                OccurredAt.of(LocalDateTime.of(2026, 6, 15, 10, 0))
+        ));
+
+        salesRepository.saveCancellationRecord(CancellationRecord.of(
+                SalesRecordId.of(2L),
+                Money.of(new BigDecimal("100000")),
+                OccurredAt.of(LocalDateTime.of(2026, 6, 20, 10, 0))
+        ));
+
+        SettlementRangeQuery query = new SettlementRangeQuery(
+                LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 12, 31)
+        );
+
+        // when
+        SettlementRangeView response = service.getSettlementsInRange(query);
+
+        // then
+        CreatorPayableView creatorView = response.responses().stream()
+                .filter(view -> view.creatorId().equals(99L))
+                .findFirst().orElseThrow();
+        assertThat(creatorView.expectedSettlementAmount())
+                .usingComparator(BigDecimal::compareTo)
+                .isEqualTo(new BigDecimal("30000"));
+        assertThat(response.totalAmount())
+                .usingComparator(BigDecimal::compareTo)
+                .isEqualTo(new BigDecimal("30000"));
+    }
+
     // --- 픽스처 헬퍼 ---
 
     private Settlement pendingFixture(CreatorId creatorId, YearMonth yearMonth) {
