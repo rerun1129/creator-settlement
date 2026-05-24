@@ -12,9 +12,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
+        format_sql: false
     open-in-view: false
-    show-sql: true
+    show-sql: false
 
 server:
   port: ${SERVER_PORT:9090}
