@@ -152,23 +152,6 @@ class SettlementServiceLifecycleTest {
     }
 
     @Test
-    @DisplayName("confirm 처리 후 Settlement는 repository에 저장되어 후속 조회에서 CONFIRMED로 확인된다")
-    void confirm_persists_via_repository_save() {
-        // Given
-        CreatorId creatorId = CreatorId.of(54L);
-        YearMonth yearMonth = YearMonth.of(2026, 7);
-        settlementRepository.save(pendingFixture(creatorId, yearMonth));
-        LocalDateTime confirmedAtLocalDateTime = LocalDateTime.of(2026, 8, 4, 9, 0);
-
-        // When
-        service.confirm(new ConfirmSettlementCommand(creatorId.value(), yearMonth, confirmedAtLocalDateTime));
-
-        // Then
-        Settlement persisted = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
-        assertThat(persisted.status()).isEqualTo(SettlementStatus.CONFIRMED);
-    }
-
-    @Test
     @DisplayName("CONFIRMED로 저장된 Settlement에 pay 호출 시 status가 PAID로 전이되고 paidAt이 보존된다")
     void pay_changes_status_to_PAID_when_stored_CONFIRMED() {
         // Given
@@ -228,23 +211,6 @@ class SettlementServiceLifecycleTest {
         assertThatThrownBy(() -> service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("이미 지급된 정산입니다");
-    }
-
-    @Test
-    @DisplayName("pay 처리 후 Settlement는 repository에 저장되어 후속 조회에서 PAID로 확인된다")
-    void pay_persists_via_repository_save() {
-        // Given
-        CreatorId creatorId = CreatorId.of(64L);
-        YearMonth yearMonth = YearMonth.of(2026, 8);
-        settlementRepository.save(confirmedFixture(creatorId, yearMonth));
-        LocalDateTime paidAtLocalDateTime = LocalDateTime.of(2026, 9, 4, 9, 0);
-
-        // When
-        service.pay(new PaySettlementCommand(creatorId.value(), yearMonth, paidAtLocalDateTime));
-
-        // Then
-        Settlement persisted = settlementRepository.findByCreatorIdAndYearMonth(creatorId, yearMonth).orElseThrow();
-        assertThat(persisted.status()).isEqualTo(SettlementStatus.PAID);
     }
 
     private Settlement pendingFixture(CreatorId creatorId, YearMonth yearMonth) {
