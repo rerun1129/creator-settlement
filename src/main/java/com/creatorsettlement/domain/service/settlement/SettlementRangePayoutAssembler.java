@@ -1,10 +1,12 @@
 package com.creatorsettlement.domain.service.settlement;
 
 import com.creatorsettlement.domain.model.vo.CreatorId;
+import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.repository.creator.CreatorRepository;
 import com.creatorsettlement.domain.repository.sales.dto.MonthlyCancellationAggregate;
 import com.creatorsettlement.domain.repository.sales.dto.MonthlySalesAggregate;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
+import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -12,8 +14,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 @Component
@@ -22,15 +26,18 @@ public class SettlementRangePayoutAssembler {
     private final SalesRepository salesRepository;
     private final CreatorRepository creatorRepository;
     private final CreatorRangePayoutCalculator creatorRangePayoutCalculator;
+    private final FeePolicyDomainService feePolicyDomainService;
 
     public SettlementRangePayoutAssembler(
             SalesRepository salesRepository,
             CreatorRepository creatorRepository,
-            CreatorRangePayoutCalculator creatorRangePayoutCalculator
+            CreatorRangePayoutCalculator creatorRangePayoutCalculator,
+            FeePolicyDomainService feePolicyDomainService
     ) {
         this.salesRepository = salesRepository;
         this.creatorRepository = creatorRepository;
         this.creatorRangePayoutCalculator = creatorRangePayoutCalculator;
+        this.feePolicyDomainService = feePolicyDomainService;
     }
 
     public SettlementRangePayoutResult assemble(LocalDate from, LocalDate to) {
@@ -49,13 +56,18 @@ public class SettlementRangePayoutAssembler {
                 cancellationAggregates, MonthlyCancellationAggregate::creatorId, MonthlyCancellationAggregate::yearMonth,
                 agg -> agg.totalRefund().value());
 
+        Set<YearMonth> allMonths = new HashSet<>();
+        salesByCreatorMonth.values().forEach(m -> allMonths.addAll(m.keySet()));
+        refundByCreatorMonth.values().forEach(m -> allMonths.addAll(m.keySet()));
+        Map<YearMonth, FeeRate> ratesByMonth = feePolicyDomainService.findEffectiveRates(allMonths);
+
         List<CreatorId> allCreatorIds = creatorRepository.findAllCreatorIds();
         List<CreatorRangePayout> payouts = allCreatorIds.stream()
                 .map(creatorId -> {
                     Map<YearMonth, BigDecimal> creatorSales = salesByCreatorMonth.getOrDefault(creatorId, Map.of());
                     Map<YearMonth, BigDecimal> creatorRefunds = refundByCreatorMonth.getOrDefault(creatorId, Map.of());
                     BigDecimal creatorExpected = creatorRangePayoutCalculator.calculate(
-                            creatorSales, creatorRefunds);
+                            creatorSales, creatorRefunds, ratesByMonth);
                     return new CreatorRangePayout(creatorId, creatorExpected);
                 })
                 .toList();

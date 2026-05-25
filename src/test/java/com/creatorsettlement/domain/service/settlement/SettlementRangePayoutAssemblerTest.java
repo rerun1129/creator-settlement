@@ -1,6 +1,5 @@
 package com.creatorsettlement.domain.service.settlement;
 
-import com.creatorsettlement.application.fee.FeePolicyService;
 import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
 import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.domain.model.course.Course;
@@ -35,7 +34,6 @@ class SettlementRangePayoutAssemblerTest {
     private InMemoryCreatorRepository creatorRepository;
     private InMemorySalesRepository salesRepository;
     private InMemoryFeePolicyRepository feePolicyRepository;
-    private FeePolicyService feePolicyService;
     private SettlementRangePayoutAssembler assembler;
 
     @BeforeEach
@@ -44,11 +42,12 @@ class SettlementRangePayoutAssemblerTest {
         creatorRepository = new InMemoryCreatorRepository();
         salesRepository = new InMemorySalesRepository(courseRepository);
         feePolicyRepository = new InMemoryFeePolicyRepository();
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, new FeePolicyDomainService(feePolicyRepository));
+        FeePolicyDomainService feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
+        FeePolicyServiceImpl feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, feePolicyDomainService);
         feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
         CreatorRangePayoutCalculator creatorRangePayoutCalculator = new CreatorRangePayoutCalculator(
-                new SettlementAmountCalculator(), feePolicyService);
-        assembler = new SettlementRangePayoutAssembler(salesRepository, creatorRepository, creatorRangePayoutCalculator);
+                new SettlementAmountCalculator());
+        assembler = new SettlementRangePayoutAssembler(salesRepository, creatorRepository, creatorRangePayoutCalculator, feePolicyDomainService);
     }
 
     @Test

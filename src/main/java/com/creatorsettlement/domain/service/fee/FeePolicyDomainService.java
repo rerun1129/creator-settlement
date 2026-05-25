@@ -1,10 +1,17 @@
 package com.creatorsettlement.domain.service.fee;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
+import com.creatorsettlement.domain.model.fee.FeePolicy;
+import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.repository.fee.FeePolicyRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 public class FeePolicyDomainService {
@@ -19,5 +26,23 @@ public class FeePolicyDomainService {
         if (repository.existsByEffectiveFrom(effectiveFrom)) {
             throw new IllegalArgumentException(DomainErrorMessage.FEE_POLICY_DUPLICATE_EFFECTIVE_FROM.message());
         }
+    }
+
+    public Map<YearMonth, FeeRate> findEffectiveRates(Set<YearMonth> months) {
+        List<FeePolicy> policies = repository.findAllOrderByEffectiveFromDesc().stream()
+                .map(record -> record.policy())
+                .toList();
+
+        Map<YearMonth, FeeRate> result = new HashMap<>();
+        for (YearMonth ym : months) {
+            LocalDate cutoff = ym.atDay(1).minusDays(1);
+            FeeRate rate = policies.stream()
+                    .filter(p -> !p.effectiveFrom().isAfter(cutoff))
+                    .findFirst()
+                    .map(FeePolicy::rate)
+                    .orElse(FeeRate.defaultRate());
+            result.put(ym, rate);
+        }
+        return result;
     }
 }

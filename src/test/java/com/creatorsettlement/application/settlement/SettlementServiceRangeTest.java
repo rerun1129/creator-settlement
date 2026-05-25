@@ -57,7 +57,8 @@ class SettlementServiceRangeTest {
         creatorRepository = new InMemoryCreatorRepository();
         salesRepository = new InMemorySalesRepository(courseRepository);
         feePolicyRepository = new InMemoryFeePolicyRepository();
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, new FeePolicyDomainService(feePolicyRepository));
+        FeePolicyDomainService feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
+        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, feePolicyDomainService);
         feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
         SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
         SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
@@ -66,7 +67,7 @@ class SettlementServiceRangeTest {
         RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
         SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
                 salesRepository, creatorRepository,
-                new CreatorRangePayoutCalculator(new SettlementAmountCalculator(), feePolicyService));
+                new CreatorRangePayoutCalculator(new SettlementAmountCalculator()), feePolicyDomainService);
         service = new SettlementServiceImpl(
                 settlementRepository,
                 settlementExcelWriter,

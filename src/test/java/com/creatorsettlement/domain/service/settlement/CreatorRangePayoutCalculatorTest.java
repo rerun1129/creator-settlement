@@ -1,16 +1,11 @@
 package com.creatorsettlement.domain.service.settlement;
 
-import com.creatorsettlement.application.fee.FeePolicyService;
-import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
-import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
-import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
-import com.creatorsettlement.infrastructure.persistence.InMemoryFeePolicyRepository;
+import com.creatorsettlement.domain.model.vo.FeeRate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Map;
 
@@ -19,23 +14,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("크리에이터 범위 예상 정산금 계산 도메인 서비스 단위 테스트")
 class CreatorRangePayoutCalculatorTest {
 
-    private InMemoryFeePolicyRepository feePolicyRepository;
-    private FeePolicyService feePolicyService;
+    private static final FeeRate DEFAULT_RATE = FeeRate.of(new BigDecimal("0.2"));
     private CreatorRangePayoutCalculator calculator;
 
     @BeforeEach
     void setUp() {
-        feePolicyRepository = new InMemoryFeePolicyRepository();
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, new FeePolicyDomainService(feePolicyRepository));
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
-        calculator = new CreatorRangePayoutCalculator(new SettlementAmountCalculator(), feePolicyService);
+        calculator = new CreatorRangePayoutCalculator(new SettlementAmountCalculator());
     }
 
     @Test
     @DisplayName("판매·환불 맵이 모두 비어있으면 0원을 반환한다")
     void calculate_returns_zero_when_both_maps_empty() {
         // When
-        BigDecimal result = calculator.calculate(Map.of(), Map.of());
+        BigDecimal result = calculator.calculate(Map.of(), Map.of(), Map.of());
 
         // Then
         assertThat(result).usingComparator(BigDecimal::compareTo).isEqualTo(BigDecimal.ZERO);
@@ -48,9 +39,10 @@ class CreatorRangePayoutCalculatorTest {
         YearMonth yearMonth = YearMonth.of(2026, 4);
         Map<YearMonth, BigDecimal> sales = Map.of(yearMonth, new BigDecimal("50000"));
         Map<YearMonth, BigDecimal> refunds = Map.of(yearMonth, new BigDecimal("10000"));
+        Map<YearMonth, FeeRate> ratesByMonth = Map.of(yearMonth, DEFAULT_RATE);
 
         // When
-        BigDecimal result = calculator.calculate(sales, refunds);
+        BigDecimal result = calculator.calculate(sales, refunds, ratesByMonth);
 
         // Then
         assertThat(result).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("32000"));
@@ -69,9 +61,10 @@ class CreatorRangePayoutCalculatorTest {
         Map<YearMonth, BigDecimal> refunds = Map.of(
                 april, new BigDecimal("20000")
         );
+        Map<YearMonth, FeeRate> ratesByMonth = Map.of(april, DEFAULT_RATE, may, DEFAULT_RATE);
 
         // When
-        BigDecimal result = calculator.calculate(sales, refunds);
+        BigDecimal result = calculator.calculate(sales, refunds, ratesByMonth);
 
         // Then
         assertThat(result).usingComparator(BigDecimal::compareTo).isEqualTo(new BigDecimal("104000"));
