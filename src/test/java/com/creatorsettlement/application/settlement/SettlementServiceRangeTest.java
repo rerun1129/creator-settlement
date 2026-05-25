@@ -1,17 +1,16 @@
 package com.creatorsettlement.application.settlement;
 
-import com.creatorsettlement.application.fee.FeePolicyService;
-import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
-import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.application.settlement.dto.CreatorPayableView;
 import com.creatorsettlement.application.settlement.dto.SettlementRangeQuery;
 import com.creatorsettlement.application.settlement.dto.SettlementRangeView;
 import com.creatorsettlement.domain.model.course.Course;
 import com.creatorsettlement.domain.model.creator.Creator;
+import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
+import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
@@ -47,7 +46,7 @@ class SettlementServiceRangeTest {
     private InMemoryCourseRepository courseRepository;
     private InMemoryCreatorRepository creatorRepository;
     private InMemoryFeePolicyRepository feePolicyRepository;
-    private FeePolicyService feePolicyService;
+    private FeePolicyDomainService feePolicyDomainService;
     private SettlementService service;
 
     @BeforeEach
@@ -57,13 +56,12 @@ class SettlementServiceRangeTest {
         creatorRepository = new InMemoryCreatorRepository();
         salesRepository = new InMemorySalesRepository(courseRepository);
         feePolicyRepository = new InMemoryFeePolicyRepository();
-        FeePolicyDomainService feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, feePolicyDomainService);
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
+        feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
+        feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.2")), LocalDate.of(2020, 1, 1)));
         SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
         SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
         PendingSettlementResolver pendingSettlementResolver = new PendingSettlementResolver(
-                salesRepository, feePolicyService, new MonthlySettlementCalculator());
+                salesRepository, feePolicyDomainService, new MonthlySettlementCalculator());
         RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
         SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
                 salesRepository, creatorRepository,
@@ -271,7 +269,7 @@ class SettlementServiceRangeTest {
     @DisplayName("다중 월 range에서 각 월의 effective 정책 rate가 적용된다")
     void getSettlementsInRange_appliesPerMonthPolicyRate_whenMultiMonthRange() {
         // given
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 5, 1)));
+        feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.18")), LocalDate.of(2026, 5, 1)));
 
         CreatorId creatorId = CreatorId.of(99L);
         creatorRepository.saveCreator(Creator.of(creatorId, "크리에이터99"));

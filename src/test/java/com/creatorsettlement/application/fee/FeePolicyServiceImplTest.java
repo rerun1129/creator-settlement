@@ -27,11 +27,13 @@ class FeePolicyServiceImplTest {
 
         private InMemoryFeePolicyRepository repository;
         private FeePolicyServiceImpl service;
+        private FeePolicyDomainService domainService;
 
         @BeforeEach
         void setUp() {
             repository = new InMemoryFeePolicyRepository();
-            service = new FeePolicyServiceImpl(repository, new FeePolicyDomainService(repository));
+            domainService = new FeePolicyDomainService(repository);
+            service = new FeePolicyServiceImpl(repository, domainService);
         }
 
         @Test
@@ -42,7 +44,7 @@ class FeePolicyServiceImplTest {
             service.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 7, 1)));
 
             // When
-            FeeRate result = service.findEffectiveRate(LocalDate.of(2026, 8, 1));
+            FeeRate result = domainService.findEffectiveRate(LocalDate.of(2026, 8, 1));
 
             // Then
             assertThat(result.value()).isEqualByComparingTo(new BigDecimal("0.18"));
@@ -55,7 +57,7 @@ class FeePolicyServiceImplTest {
             service.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2026, 7, 1)));
 
             // When
-            FeeRate rate = service.findEffectiveRate(LocalDate.of(2026, 6, 1));
+            FeeRate rate = domainService.findEffectiveRate(LocalDate.of(2026, 6, 1));
 
             // Then
             assertThat(rate.value()).isEqualByComparingTo(FeeRate.defaultRate().value());
@@ -68,7 +70,7 @@ class FeePolicyServiceImplTest {
             service.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 7, 1)));
 
             // When
-            FeeRate result = service.findEffectiveRate(LocalDate.of(2026, 7, 31));
+            FeeRate result = domainService.findEffectiveRate(LocalDate.of(2026, 7, 31));
 
             // Then
             assertThat(result.value()).isEqualByComparingTo(FeeRate.defaultRate().value());
@@ -82,7 +84,7 @@ class FeePolicyServiceImplTest {
             service.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2026, 8, 15)));
 
             // When
-            FeeRate rate = service.findEffectiveRate(LocalDate.of(2026, 8, 20));
+            FeeRate rate = domainService.findEffectiveRate(LocalDate.of(2026, 8, 20));
 
             // Then
             assertThat(rate.value()).isEqualByComparingTo(new BigDecimal("0.18"));
@@ -96,8 +98,8 @@ class FeePolicyServiceImplTest {
             service.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2020, 6, 15)));
 
             // When
-            FeeRate currentMonth = service.findEffectiveRate(LocalDate.of(2020, 6, 20));
-            FeeRate nextMonth = service.findEffectiveRate(LocalDate.of(2020, 7, 1));
+            FeeRate currentMonth = domainService.findEffectiveRate(LocalDate.of(2020, 6, 20));
+            FeeRate nextMonth = domainService.findEffectiveRate(LocalDate.of(2020, 7, 1));
 
             // Then
             assertThat(currentMonth.value()).isEqualByComparingTo(new BigDecimal("0.2"));
@@ -111,11 +113,13 @@ class FeePolicyServiceImplTest {
 
         private InMemoryFeePolicyRepository repository;
         private FeePolicyServiceImpl service;
+        private FeePolicyDomainService domainService;
 
         @BeforeEach
         void setUp() {
             repository = new InMemoryFeePolicyRepository();
-            service = new FeePolicyServiceImpl(repository, new FeePolicyDomainService(repository));
+            domainService = new FeePolicyDomainService(repository);
+            service = new FeePolicyServiceImpl(repository, domainService);
         }
 
         @Test
@@ -128,7 +132,7 @@ class FeePolicyServiceImplTest {
             service.register(cmd);
 
             // Then
-            FeeRate result = service.findEffectiveRate(LocalDate.of(2026, 8, 1));
+            FeeRate result = domainService.findEffectiveRate(LocalDate.of(2026, 8, 1));
             assertThat(result.value()).isEqualByComparingTo(new BigDecimal("0.18"));
         }
 

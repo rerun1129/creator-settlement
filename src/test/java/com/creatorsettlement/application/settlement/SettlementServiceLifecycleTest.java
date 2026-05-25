@@ -1,12 +1,10 @@
 package com.creatorsettlement.application.settlement;
 
-import com.creatorsettlement.application.fee.FeePolicyService;
-import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
-import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.PaySettlementCommand;
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.course.Course;
+import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.settlement.Settlement;
@@ -58,7 +56,6 @@ class SettlementServiceLifecycleTest {
         private InMemoryCourseRepository courseRepository;
         private InMemoryCreatorRepository creatorRepository;
         private InMemoryFeePolicyRepository feePolicyRepository;
-        private FeePolicyService feePolicyService;
         private SettlementService service;
 
         @BeforeEach
@@ -69,12 +66,11 @@ class SettlementServiceLifecycleTest {
             salesRepository = new InMemorySalesRepository(courseRepository);
             feePolicyRepository = new InMemoryFeePolicyRepository();
             FeePolicyDomainService feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
-            feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, feePolicyDomainService);
-            feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
+            feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.2")), LocalDate.of(2020, 1, 1)));
             SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
             SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
             PendingSettlementResolver pendingSettlementResolver = new PendingSettlementResolver(
-                    salesRepository, feePolicyService, new MonthlySettlementCalculator());
+                    salesRepository, feePolicyDomainService, new MonthlySettlementCalculator());
             RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
             SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
                     salesRepository, creatorRepository,
@@ -250,7 +246,6 @@ class SettlementServiceLifecycleTest {
         private InMemoryCourseRepository courseRepository;
         private InMemoryCreatorRepository creatorRepository;
         private InMemoryFeePolicyRepository feePolicyRepository;
-        private FeePolicyService feePolicyService;
         private SettlementService service;
 
         @BeforeEach
@@ -261,12 +256,11 @@ class SettlementServiceLifecycleTest {
             salesRepository = new InMemorySalesRepository(courseRepository);
             feePolicyRepository = new InMemoryFeePolicyRepository();
             FeePolicyDomainService feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
-            feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, feePolicyDomainService);
-            feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
+            feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.2")), LocalDate.of(2020, 1, 1)));
             SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
             SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
             PendingSettlementResolver pendingSettlementResolver = new PendingSettlementResolver(
-                    salesRepository, feePolicyService, new MonthlySettlementCalculator());
+                    salesRepository, feePolicyDomainService, new MonthlySettlementCalculator());
             RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
             SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
                     salesRepository, creatorRepository,

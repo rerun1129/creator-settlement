@@ -1,12 +1,10 @@
 package com.creatorsettlement.application.settlement;
 
-import com.creatorsettlement.application.fee.FeePolicyService;
-import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
-import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.application.settlement.dto.ConfirmSettlementCommand;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementQuery;
 import com.creatorsettlement.application.settlement.dto.MonthlySettlementView;
 import com.creatorsettlement.domain.model.course.Course;
+import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.settlement.Settlement;
@@ -51,7 +49,6 @@ class SettlementServiceMonthlyQueryTest {
     private InMemoryCourseRepository courseRepository;
     private InMemoryCreatorRepository creatorRepository;
     private InMemoryFeePolicyRepository feePolicyRepository;
-    private FeePolicyService feePolicyService;
     private SettlementService service;
 
     @BeforeEach
@@ -62,12 +59,11 @@ class SettlementServiceMonthlyQueryTest {
         salesRepository = new InMemorySalesRepository(courseRepository);
         feePolicyRepository = new InMemoryFeePolicyRepository();
         FeePolicyDomainService feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, feePolicyDomainService);
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
+        feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.2")), LocalDate.of(2020, 1, 1)));
         SettlementExcelWriter settlementExcelWriter = new SettlementExcelWriter();
         SettlementMonthClosurePolicy monthClosurePolicy = new SettlementMonthClosurePolicy();
         PendingSettlementResolver pendingSettlementResolver = new PendingSettlementResolver(
-                salesRepository, feePolicyService, new MonthlySettlementCalculator());
+                salesRepository, feePolicyDomainService, new MonthlySettlementCalculator());
         RequiredSettlementResolver requiredSettlementResolver = new RequiredSettlementResolver(settlementRepository);
         SettlementRangePayoutAssembler settlementRangePayoutAssembler = new SettlementRangePayoutAssembler(
                 salesRepository, creatorRepository,
@@ -156,7 +152,7 @@ class SettlementServiceMonthlyQueryTest {
     @DisplayName("정산 대상 월에 적용 가능한 정책(전월 이전 등록) rate가 platformFee 산출에 적용된다")
     void applies_effective_policy_rate_when_policy_registered_for_target_month() {
         // Given
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.18"), LocalDate.of(2026, 7, 1)));
+        feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.18")), LocalDate.of(2026, 7, 1)));
 
         CreatorId creatorId = CreatorId.of(99L);
         YearMonth yearMonth = YearMonth.of(2026, 8);

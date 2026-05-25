@@ -8,7 +8,6 @@ import com.creatorsettlement.domain.repository.fee.FeePolicyRepository;
 import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -20,14 +19,6 @@ public class FeePolicyServiceImpl implements FeePolicyService {
     public FeePolicyServiceImpl(FeePolicyRepository repository, FeePolicyDomainService domainService) {
         this.repository = repository;
         this.domainService = domainService;
-    }
-
-    @Override
-    public FeeRate findEffectiveRate(LocalDate referenceDate) {
-        LocalDate firstDayOfMonth = referenceDate.withDayOfMonth(1);
-        return repository.findEffectiveAt(firstDayOfMonth.minusDays(1))
-                .map(FeePolicy::rate)
-                .orElse(FeeRate.defaultRate());
     }
 
     @Override

@@ -1,15 +1,14 @@
 package com.creatorsettlement.domain.service.settlement;
 
-import com.creatorsettlement.application.fee.FeePolicyService;
-import com.creatorsettlement.application.fee.FeePolicyServiceImpl;
-import com.creatorsettlement.application.fee.dto.RegisterFeePolicyCommand;
 import com.creatorsettlement.domain.model.course.Course;
+import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.sales.CancellationRecord;
 import com.creatorsettlement.domain.model.sales.SalesRecord;
 import com.creatorsettlement.domain.model.settlement.Settlement;
 import com.creatorsettlement.domain.model.settlement.SettlementStatus;
 import com.creatorsettlement.domain.model.vo.CourseId;
 import com.creatorsettlement.domain.model.vo.CreatorId;
+import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
 import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
@@ -35,7 +34,7 @@ class PendingSettlementResolverTest {
     private InMemorySalesRepository salesRepository;
     private InMemoryCourseRepository courseRepository;
     private InMemoryFeePolicyRepository feePolicyRepository;
-    private FeePolicyService feePolicyService;
+    private FeePolicyDomainService feePolicyDomainService;
     private PendingSettlementResolver resolver;
 
     @BeforeEach
@@ -43,9 +42,9 @@ class PendingSettlementResolverTest {
         courseRepository = new InMemoryCourseRepository();
         salesRepository = new InMemorySalesRepository(courseRepository);
         feePolicyRepository = new InMemoryFeePolicyRepository();
-        feePolicyService = new FeePolicyServiceImpl(feePolicyRepository, new FeePolicyDomainService(feePolicyRepository));
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.2"), LocalDate.of(2020, 1, 1)));
-        resolver = new PendingSettlementResolver(salesRepository, feePolicyService, new MonthlySettlementCalculator());
+        feePolicyDomainService = new FeePolicyDomainService(feePolicyRepository);
+        feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.2")), LocalDate.of(2020, 1, 1)));
+        resolver = new PendingSettlementResolver(salesRepository, feePolicyDomainService, new MonthlySettlementCalculator());
     }
 
     @Test
@@ -105,7 +104,7 @@ class PendingSettlementResolverTest {
     void resolve_applies_effective_fee_rate_from_yearMonth_first_day() {
         // Given
         CreatorId creatorId = CreatorId.of(82L);
-        feePolicyService.register(new RegisterFeePolicyCommand(new BigDecimal("0.3"), LocalDate.of(2026, 3, 1)));
+        feePolicyRepository.save(FeePolicy.of(FeeRate.of(new BigDecimal("0.3")), LocalDate.of(2026, 3, 1)));
         YearMonth yearMonth = YearMonth.of(2026, 4);
 
         // When
