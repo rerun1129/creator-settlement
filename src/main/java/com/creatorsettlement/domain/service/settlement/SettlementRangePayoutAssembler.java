@@ -9,7 +9,6 @@ import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
 import com.creatorsettlement.domain.service.settlement.dto.CreatorRangePayout;
 import com.creatorsettlement.domain.service.settlement.dto.SettlementRangePayoutResult;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-@Component
 public class SettlementRangePayoutAssembler {
 
     private final SalesRepository salesRepository;

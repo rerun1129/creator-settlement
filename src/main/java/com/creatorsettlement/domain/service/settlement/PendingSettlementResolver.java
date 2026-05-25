@@ -7,11 +7,9 @@ import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.repository.sales.dto.CancellationSummary;
 import com.creatorsettlement.domain.repository.sales.dto.SalesSummary;
 import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
-import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
 
-@Component
 public class PendingSettlementResolver {
 
     private final SalesRepository salesRepository;

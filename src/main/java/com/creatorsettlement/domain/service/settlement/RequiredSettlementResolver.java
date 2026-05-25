@@ -4,11 +4,9 @@ import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.settlement.Settlement;
 import com.creatorsettlement.domain.model.vo.CreatorId;
 import com.creatorsettlement.domain.repository.settlement.SettlementRepository;
-import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
 
-@Component
 public class RequiredSettlementResolver {
 
     private final SettlementRepository settlementRepository;

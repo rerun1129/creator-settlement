@@ -2,7 +2,6 @@ package com.creatorsettlement.domain.service.settlement;
 
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.model.vo.Money;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
@@ -10,7 +9,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@Component
 public class CreatorRangePayoutCalculator {
 
     private final SettlementAmountCalculator settlementAmountCalculator;

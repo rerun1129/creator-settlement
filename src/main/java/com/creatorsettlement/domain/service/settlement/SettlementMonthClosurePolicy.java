@@ -1,12 +1,10 @@
 package com.creatorsettlement.domain.service.settlement;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
-import org.springframework.stereotype.Component;
 
 import java.time.YearMonth;
 import java.time.ZoneId;
 
-@Component
 public class SettlementMonthClosurePolicy {
 
     private static final ZoneId KST_ZONE = ZoneId.of("Asia/Seoul");
