@@ -1,7 +1,9 @@
 package com.creatorsettlement.configuration;
 
 import com.creatorsettlement.domain.repository.course.CourseRepository;
+import com.creatorsettlement.domain.repository.fee.FeePolicyRepository;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
+import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
 import com.creatorsettlement.domain.service.sales.CancellationRegistrationPolicy;
 import com.creatorsettlement.domain.service.sales.RefundPolicy;
 import com.creatorsettlement.domain.service.sales.SaleRegistrationPolicy;
@@ -36,5 +38,10 @@ public class DomainBeanConfiguration {
     @Bean
     public SettlementAmountCalculator settlementAmountCalculator() {
         return new SettlementAmountCalculator();
+    }
+
+    @Bean
+    public FeePolicyDomainService feePolicyDomainService(FeePolicyRepository feePolicyRepository) {
+        return new FeePolicyDomainService(feePolicyRepository);
     }
 }

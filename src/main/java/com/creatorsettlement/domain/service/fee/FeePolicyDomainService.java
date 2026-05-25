@@ -4,7 +4,6 @@ import com.creatorsettlement.domain.error.DomainErrorMessage;
 import com.creatorsettlement.domain.model.fee.FeePolicy;
 import com.creatorsettlement.domain.model.vo.FeeRate;
 import com.creatorsettlement.domain.repository.fee.FeePolicyRepository;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Service
 public class FeePolicyDomainService {
 
     private final FeePolicyRepository repository;
