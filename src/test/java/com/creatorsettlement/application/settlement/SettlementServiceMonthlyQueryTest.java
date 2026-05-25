@@ -23,6 +23,7 @@ import com.creatorsettlement.domain.service.settlement.MonthlySettlementCalculat
 import com.creatorsettlement.domain.service.settlement.PendingSettlementResolver;
 import com.creatorsettlement.domain.service.settlement.RequiredSettlementResolver;
 import com.creatorsettlement.domain.service.settlement.SettlementAmountCalculator;
+import com.creatorsettlement.domain.service.settlement.SettlementMonthClosurePolicy;
 import com.creatorsettlement.domain.service.settlement.SettlementRangePayoutAssembler;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCreatorRepository;

@@ -1,4 +1,4 @@
-package com.creatorsettlement.application.settlement;
+package com.creatorsettlement.domain.service.settlement;
 
 import com.creatorsettlement.domain.error.DomainErrorMessage;
 import org.springframework.stereotype.Component;
