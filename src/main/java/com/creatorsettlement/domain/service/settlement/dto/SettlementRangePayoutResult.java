@@ -1,4 +1,4 @@
-package com.creatorsettlement.domain.service.settlement;
+package com.creatorsettlement.domain.service.settlement.dto;
 
 import java.math.BigDecimal;
 import java.util.List;

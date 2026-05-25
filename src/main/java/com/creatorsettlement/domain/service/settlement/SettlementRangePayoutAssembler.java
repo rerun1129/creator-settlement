@@ -7,6 +7,8 @@ import com.creatorsettlement.domain.repository.sales.dto.MonthlyCancellationAggr
 import com.creatorsettlement.domain.repository.sales.dto.MonthlySalesAggregate;
 import com.creatorsettlement.domain.repository.sales.SalesRepository;
 import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
+import com.creatorsettlement.domain.service.settlement.dto.CreatorRangePayout;
+import com.creatorsettlement.domain.service.settlement.dto.SettlementRangePayoutResult;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

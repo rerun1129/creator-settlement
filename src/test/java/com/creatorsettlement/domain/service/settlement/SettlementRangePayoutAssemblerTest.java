@@ -13,6 +13,8 @@ import com.creatorsettlement.domain.model.vo.OccurredAt;
 import com.creatorsettlement.domain.model.vo.SalesRecordId;
 import com.creatorsettlement.domain.model.vo.StudentId;
 import com.creatorsettlement.domain.service.fee.FeePolicyDomainService;
+import com.creatorsettlement.domain.service.settlement.dto.CreatorRangePayout;
+import com.creatorsettlement.domain.service.settlement.dto.SettlementRangePayoutResult;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCourseRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryCreatorRepository;
 import com.creatorsettlement.infrastructure.persistence.InMemoryFeePolicyRepository;

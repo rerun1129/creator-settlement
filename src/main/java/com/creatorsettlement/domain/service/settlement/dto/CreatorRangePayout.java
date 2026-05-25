@@ -1,4 +1,4 @@
-package com.creatorsettlement.domain.service.settlement;
+package com.creatorsettlement.domain.service.settlement.dto;
 
 import com.creatorsettlement.domain.model.vo.CreatorId;
 

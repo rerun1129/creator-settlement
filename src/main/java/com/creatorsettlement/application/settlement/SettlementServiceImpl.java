@@ -16,7 +16,7 @@ import com.creatorsettlement.domain.service.settlement.PendingSettlementResolver
 import com.creatorsettlement.domain.service.settlement.RequiredSettlementResolver;
 import com.creatorsettlement.domain.service.settlement.SettlementRangePayoutAssembler;
 import com.creatorsettlement.domain.service.settlement.SettlementMonthClosurePolicy;
-import com.creatorsettlement.domain.service.settlement.SettlementRangePayoutResult;
+import com.creatorsettlement.domain.service.settlement.dto.SettlementRangePayoutResult;
 import com.creatorsettlement.infrastructure.settlement.excel.SettlementExcelWriter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
